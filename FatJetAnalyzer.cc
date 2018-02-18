@@ -1,74 +1,52 @@
 #include "FatJetAnalyzer.h"
 
-//
-// See header file for class documentation
-//
-
 using namespace baconhep;
 using namespace std;
+double ELECTRON_MASS  = 0.000511;
 
 bool P4SortCondition(TLorentzVector p1, TLorentzVector p2) {return (p1.Pt() > p2.Pt());} 
 
 FatJetAnalyzer::FatJetAnalyzer() : BLTSelector()
 {
-
 }
 
 FatJetAnalyzer::~FatJetAnalyzer()
 {
-
 }
 
 void FatJetAnalyzer::Begin(TTree *tree)
 {
-    // Parse command line option
     std::string tmp_option = GetOption();
     std::vector<std::string> options;
     std::regex re_whitespace("(\\s+)");  // split by white space
     std::copy(std::sregex_token_iterator(tmp_option.begin(), tmp_option.end(), re_whitespace, -1),
-            std::sregex_token_iterator(), std::back_inserter(options));
+    std::sregex_token_iterator(), std::back_inserter(options));
 
-    // Set the parameters
     params.reset(new Parameters());
     params->setup(options);
-
-    // Set the cuts
     cuts.reset(new Cuts());
     particleSelector.reset(new ParticleSelector(*params, *cuts));
 
-    // Trigger bits mapping file
     const std::string cmssw_base = getenv("CMSSW_BASE");
     std::string trigfilename = cmssw_base + "/src/BaconAna/DataFormats/data/HLTFile_25ns";
     trigger.reset(new baconhep::TTrigger(trigfilename));
 
-    if (params->selection == "mumu" || params->selection == "emu") {
-        triggerNames.push_back("HLT_IsoMu22_v*");
-        triggerNames.push_back("HLT_IsoTkMu22_v*");
-        //to be added when including e-h
-        //triggerNames.push_back("HLT_IsoMu24_v*");
-        //triggerNames.push_back("HLT_IsoTkMu24_v*");
-       } 
-    else if (params->selection == "ee") {
-        //triggerNames.push_back("HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*");
-        triggerNames.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v*");
-        triggerNames.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*");
-    }
+    triggerNames.push_back("HLT_IsoMu22_v*");
+    triggerNames.push_back("HLT_IsoTkMu22_v*");
+    triggerNames.push_back("HLT_Ele27_WPTight_Gsf_v*");
+    triggerNames.push_back("HLT_Ele23_WPLoose_Gsf_v*");
 
-    // Weight utility class
     weights.reset(new WeightUtils(params->period, params->selection, false));
-
-    // Lumi mask
-    // Set up object to handle good run-lumi filtering if necessary
     lumiMask = RunLumiRangeMap();
-    if (true) { // this will need to be turned off for MC
-        string jsonFileName = cmssw_base + "/src/BLT/BLTAnalysis/data/Cert_271036-277148_13TeV_PromptReco_Collisions16_JSON.txt";
-        lumiMask.AddJSONFile(jsonFileName);
+    if (true) 
+    { 
+      string jsonFileName = cmssw_base + "/src/BLT/BLTAnalysis/data/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt";
+      //string jsonFileName = cmssw_base + "/src/BLT/BLTAnalysis/data/Cert_271036-277148_13TeV_PromptReco_Collisions16_JSON.txt";
+      lumiMask.AddJSONFile(jsonFileName);
     }
-
-    // muon momentum corrections
+    
     muonCorr = new rochcor2016();
-
-    // Prepare the output tree
+    
     string outFileName = params->get_output_filename("output");
     string outTreeName = params->get_output_treename("tree");
 
@@ -76,66 +54,75 @@ void FatJetAnalyzer::Begin(TTree *tree)
     outFile->cd();
     outTree = new TTree(outTreeName.c_str(), "bltTree");
 
-    // event data
     outTree->Branch("runNumber", &runNumber);
     outTree->Branch("evtNumber", &evtNumber, "eventNumber/l");
     outTree->Branch("lumiSection", &lumiSection);
     outTree->Branch("triggerStatus", &triggerStatus);
     outTree->Branch("eventWeight", &eventWeight);
+    outTree->Branch("eventWeightPU", &eventWeightPU);
+    outTree->Branch("eventWeightGen", &eventWeightGen);
+    outTree->Branch("puWeight", &puWeight);
+    outTree->Branch("nPartons", &nPartons);
+    outTree->Branch("topPtWeight", &topPtWeight);
     outTree->Branch("nPU", &nPU);
-
+    outTree->Branch("nPV", &nPV);
     outTree->Branch("met", &met);
     outTree->Branch("metPhi", &metPhi);
-
-    // leptons
-    outTree->Branch("leptonOneP4", &leptonOneP4);
-    outTree->Branch("leptonOneIso", &leptonOneIso);
-    outTree->Branch("leptonOneQ", &leptonOneQ);
-    outTree->Branch("leptonOneFlavor", &leptonOneFlavor);
-    outTree->Branch("leptonOneTrigger", &leptonOneTrigger);
-    outTree->Branch("leptonTwoP4", &leptonTwoP4);
-    outTree->Branch("leptonTwoIso", &leptonTwoIso);
-    outTree->Branch("leptonTwoQ", &leptonTwoQ);
-    outTree->Branch("leptonTwoFlavor", &leptonTwoFlavor);
-    outTree->Branch("leptonTwoTrigger", &leptonTwoTrigger);
-
-    // jets
-    outTree->Branch("jetP4", &jetP4);
-    outTree->Branch("jetD0", &jetD0);
-    outTree->Branch("jetTag", &jetTag);
-    outTree->Branch("jetFlavor", &jetFlavor);
-
-    outTree->Branch("subLeadingJetP4", &subLeadingJetP4);
-    outTree->Branch("subLeadingJetD0", &subLeadingJetD0);
-    outTree->Branch("subLeadingJetTag", &subLeadingJetTag);
-    outTree->Branch("subLeadingJetFlavor", &subLeadingJetFlavor);
-
-    outTree->Branch("bjetP4", &bjetP4);
-    outTree->Branch("bjetD0", &bjetD0);
-    outTree->Branch("bjetTag", &bjetTag);
-    outTree->Branch("bjetFlavor", &bjetFlavor);
-
-    outTree->Branch("genBJetP4", &genBJetP4);
-    outTree->Branch("genBJetTag", &genBJetTag);
-    outTree->Branch("genJetP4", &genJetP4);
-    outTree->Branch("genJetTag", &genJetTag);
-
-    outTree->Branch("fatJetP4", &fatJetP4);
-    outTree->Branch("fatJetTrimMass", &fatJetTrimMass);
-    outTree->Branch("fatJetPrunMass", &fatJetPrunMass);
-    outTree->Branch("fatJetSD0", &fatJetSD0);
-    outTree->Branch("fatJetTau1", &fatJetTau1);
-    outTree->Branch("fatJetTau2", &fatJetTau2);
-    outTree->Branch("fatJetTau3", &fatJetTau3);
-
-    // object counters
-    outTree->Branch("nMuons", &nMuons);
-    outTree->Branch("nElectrons", &nElectrons);
-    outTree->Branch("nJets", &nJets);
-    outTree->Branch("nFwdJets", &nFwdJets);
-    outTree->Branch("nBJets", &nBJets);
-    outTree->Branch("nPartons", &nPartons);
-    outTree->Branch("nfatJets", &nfatJets);
+    //leptons
+    //muons
+    outTree->Branch("muon_pt", &muon_pt);
+    outTree->Branch("muon_phi", &muon_phi); 
+    outTree->Branch("muon_eta", &muon_eta);
+    outTree->Branch("muon_pt_corr", &muon_pt_corr);
+    outTree->Branch("muon_phi_corr", &muon_phi_corr);
+    outTree->Branch("muon_eta_corr", &muon_eta_corr);
+    outTree->Branch("muon_trkIso", &muon_trkIso);
+    outTree->Branch("muon_pfIso", &muon_pfIso);
+    outTree->Branch("muon_charge", &muon_charge);
+    outTree->Branch("muon_d0", &muon_d0);
+    outTree->Branch("muon_dz", &muon_dz);
+    outTree->Branch("muon_sip3d", &muon_sip3d);
+    outTree->Branch("muon_id", &muon_id);
+    outTree->Branch("muon_id_alternate", &muon_id_alternate);
+    outTree->Branch("muon_id_tightUCSD", &muon_id_tightUCSD);
+    outTree->Branch("muon_id_tightMIT", &muon_id_tightMIT);
+    outTree->Branch("muon_id_veryLooseUCSD", &muon_id_veryLooseUCSD);
+    outTree->Branch("muon_recoEW", &muon_recoEW);
+    outTree->Branch("muon_triggerEW", &muon_triggerEW);
+    outTree->Branch("muon_trigger", &muon_trigger);
+    //electron
+    outTree->Branch("electron_pt", &electron_pt);
+    outTree->Branch("electron_phi", &electron_phi);
+    outTree->Branch("electron_eta", &electron_eta);
+    outTree->Branch("electron_pfIso", &electron_pfIso);
+    outTree->Branch("electron_trkIso", &electron_trkIso);
+    outTree->Branch("electron_charge", &electron_charge);
+    outTree->Branch("electron_d0", &electron_d0);
+    outTree->Branch("electron_dz", &electron_dz);
+    outTree->Branch("electron_sip3d", &electron_sip3d);
+    outTree->Branch("electron_id", &electron_id);
+    outTree->Branch("electron_id_tightUCSD", &electron_id_tightUCSD);
+    outTree->Branch("electron_id_tightMIT", &electron_id_tightMIT);
+    outTree->Branch("electron_id_veryLooseUCSD", &electron_id_veryLooseUCSD);
+    outTree->Branch("electron_id_HLTsafeMIT", &electron_id_HLTsafeMIT);
+    outTree->Branch("electron_recoEW", &electron_recoEW);
+    outTree->Branch("electron_triggerEW", &electron_triggerEW);
+    outTree->Branch("electron_trigger", &electron_trigger);
+    //jets
+    outTree->Branch("jet_pt", &jet_pt);
+    outTree->Branch("jet_eta", &jet_eta);
+    outTree->Branch("jet_phi", &jet_phi);
+    outTree->Branch("jet_mass", &jet_mass);
+    outTree->Branch("jet_csv", &jet_csv);
+    //fat jets
+    outTree->Branch("ak8jet_prunMass", &ak8jet_prunMass);
+    outTree->Branch("ak8jet_trimMass", &ak8jet_trimMass);
+    outTree->Branch("ak8jet_sd0", &ak8jet_sd0);
+    outTree->Branch("ak8jet_pt", &ak8jet_pt);
+    outTree->Branch("ak8jet_phi", &ak8jet_phi);
+    outTree->Branch("ak8jet_eta", &ak8jet_eta);
+    outTree->Branch("ak8jet_tau1", &ak8jet_tau1);
+    outTree->Branch("ak8jet_tau2", &ak8jet_tau2);
 
     // event counter
     string outHistName = params->get_output_treename("TotalEvents");
@@ -152,50 +139,130 @@ Bool_t FatJetAnalyzer::Process(Long64_t entry)
     hTotalEvents->Fill(1);
 
     if (entry%10000==0)  std::cout << "... Processing event: " << entry << " Run: " << fInfo->runNum << " Lumi: " << fInfo->lumiSec << " Event: " << fInfo->evtNum << "." << std::endl;
+    //if(not(fInfo->evtNum==56 or fInfo->evtNum==80)) return kTRUE;
 
-    //if (fInfo->runNum != 275963 || fInfo->evtNum != 88834144)
-    //    return kTRUE;
+    //muons
+    muon_pt.clear();
+    muon_eta.clear();
+    muon_phi.clear();
+    muon_pt_corr.clear();
+    muon_eta_corr.clear();
+    muon_phi_corr.clear();
+    muon_trkIso.clear();
+    muon_pfIso.clear();
+    muon_charge.clear();
+    muon_d0.clear();
+    muon_dz.clear();
+    muon_sip3d.clear();
+    muon_id.clear();
+    muon_id_alternate.clear();
+    muon_id_tightUCSD.clear();
+    muon_id_tightMIT.clear();
+    muon_id_veryLooseUCSD.clear();
+    muon_recoEW.clear();
+    muon_triggerEW.clear();
+    muon_trigger.clear();
+    //electrons
+    electron_pt.clear();
+    electron_eta.clear();
+    electron_phi.clear();
+    electron_trkIso.clear();
+    electron_pfIso.clear();
+    electron_charge.clear();
+    electron_d0.clear();
+    electron_dz.clear();
+    electron_sip3d.clear();
+    electron_id.clear();
+    electron_id_tightUCSD.clear();
+    electron_id_tightMIT.clear();
+    electron_id_veryLooseUCSD.clear();
+    electron_id_HLTsafeMIT.clear();
+    electron_recoEW.clear();
+    electron_triggerEW.clear();
+    electron_trigger.clear();
+    //jets
+    jet_pt.clear();
+    jet_eta.clear();
+    jet_phi.clear();
+    jet_mass.clear();
+    jet_csv.clear();
+    ak8jet_prunMass.clear();
+    ak8jet_trimMass.clear();
+    ak8jet_sd0.clear();
+    ak8jet_pt.clear();
+    ak8jet_phi.clear();
+    ak8jet_eta.clear();
+    ak8jet_tau1.clear();
+    ak8jet_tau2.clear();
 
     const bool isData = (fInfo->runNum != 1);
     particleSelector->SetRealData(isData);
-
-    // Apply lumi mask
-    //if (isData) {
-        //RunLumiRangeMap::RunLumiPairType rl(fInfo->runNum, fInfo->lumiSec);
-        //if(!lumiMask.HasRunLumi(rl)) 
-            //return kTRUE;
-    //}
+    if (isData) 
+    {
+      RunLumiRangeMap::RunLumiPairType rl(fInfo->runNum, fInfo->lumiSec);
+    }
     hTotalEvents->Fill(2);
-    /* Trigger selection */
+
     bool passTrigger = false;
-    for (unsigned i = 0; i < triggerNames.size(); ++i) {
-        passTrigger |= trigger->pass(triggerNames[i], fInfo->triggerBits);
+    for (unsigned i = 0; i < triggerNames.size(); ++i) 
+    {
+      passTrigger |= trigger->pass(triggerNames[i], fInfo->triggerBits);
     }
     if (!passTrigger && isData)
-        return kTRUE;
-
+      return kTRUE;
     hTotalEvents->Fill(3);
 
-    /////////////////////
-    // Fill event info //
-    /////////////////////
-
     eventWeight   = 1;
+    eventWeightPU = 1.0;
+    eventWeightGen = 1.0;
     runNumber     = fInfo->runNum;
     evtNumber     = fInfo->evtNum;
     lumiSection   = fInfo->lumiSec;
     triggerStatus = passTrigger;
-    nPU           = fPVArr->GetEntries();
-    if (!isData) {
-        eventWeight *= 1.;//weights->GetPUWeight(fInfo->nPUmean); // pileup reweighting
+    nPV           = fPVArr->GetEntries();
+    if (isData) 
+    {
+      eventWeight *= 1.;
+      eventWeightPU = 1.0;
+    }
+    else
+    {
+      nPU = fInfo->nPUmean;
+      puWeight = weights->GetPUWeight(fInfo->nPUmean); // pileup reweighting
+      eventWeight *= puWeight;
+      eventWeightGen = fGenEvtInfo->weight;
+      //std::cout << "puWeight = " << puWeight << std::endl; 
     }
 
-
-    ///////////////////
-    // Select objects//
-    ///////////////////
-
-    /* Vertices */
+    float topSF = 1.;
+    if (!isData) 
+    {
+      unsigned count = 0;
+      for (int i = 0; i < fGenParticleArr->GetEntries(); ++i) 
+      {
+        TGenParticle* particle = (TGenParticle*) fGenParticleArr->At(i);
+        // parton counting for jet-binned Drell-Yan samples
+        if (particle->status == 23 
+         && (abs(particle->pdgId) < 6 || particle->pdgId == 21) 
+         && particle->parent != -2)
+        {
+          ++count;
+        }
+        // top pt reweighting: get the scale factor based on the top quark pt
+        if (abs(particle->pdgId) == 6 && particle->status == 62) 
+        {
+           topSF *= exp(0.0615 - 0.0005*particle->pt);
+        }
+      }
+      nPartons = count;
+      topPtWeight = sqrt(topSF);
+    }
+    else
+    {
+      nPartons = 0.0;
+      topPtWeight = 1.0;
+    } 
+ 
     if (fInfo->hasGoodPV) {
         assert(fPVArr->GetEntries() != 0);
         TVector3 pv;
@@ -208,16 +275,14 @@ Bool_t FatJetAnalyzer::Process(Long64_t entry)
     particleSelector->SetNPV(fInfo->nPU + 1);
     particleSelector->SetRho(fInfo->rhoJet);
 
-    /* MUONS */
-    /* Apply a preselection so we can make a collection of muons to clean against */
     vector<TMuon*> tmp_muons;
     for (int i=0; i < fMuonArr->GetEntries(); i++) {
         TMuon* muon = (TMuon*) fMuonArr->At(i);
         assert(muon);
-
-        if (
-                muon->pt > 5 
-                && fabs(muon->eta) < 2.4
+/*
+        if (    muon->pt > 5 
+                &&
+                fabs(muon->eta) < 2.4
                 // tight muon ID
                 //&& (muon->typeBits & baconhep::kPFMuon) 
                 && (muon->typeBits & baconhep::kGlobal) 
@@ -228,445 +293,151 @@ Bool_t FatJetAnalyzer::Process(Long64_t entry)
                 && fabs(muon->dz)   < 0.5
                 && muon->nTkLayers  > 5 
                 && muon->nValidHits > 0
-           ) {
+           ) {*/
             tmp_muons.push_back(muon);
-        }
+        //}
     }
-    sort(tmp_muons.begin(), tmp_muons.end(), sort_by_higher_pt<TMuon>);
+    sort(tmp_muons.begin(), tmp_muons.end(), sort_by_higher_pt<TMuon>); 
 
-    // Second pass
-    //int trigger_muon_index = -1;
-    vector<TLorentzVector> muons;
-    vector<TLorentzVector> veto_muons;
-    vector<float> muons_iso;
-    vector<float> muons_q;
-    vector<bool> muons_trigger;
-    for (unsigned i = 0; i < tmp_muons.size(); i++) {
-        TMuon* muon = tmp_muons[i];
-        TLorentzVector muonP4;
-        copy_p4(tmp_muons[i], MUON_MASS, muonP4);
-
-        // Remove muon track pt from muon track isolation variable
-        for (unsigned j = i+1; j < tmp_muons.size(); j++) {
-            TLorentzVector muon_j;
-            copy_p4(tmp_muons[j], MUON_MASS, muon_j);
-
-            if (muonP4.DeltaR(muon_j) < 0.3) {
-                muon->trkIso = max(0., muon->trkIso - muon_j.Pt());
-                tmp_muons[j]->trkIso = max(0., tmp_muons[j]->trkIso - muonP4.Pt());
-            }
+    vector<TMuon*> muons;
+    for (unsigned i = 0; i < tmp_muons.size(); i++) 
+    //for (int i=0; i < fMuonArr->GetEntries(); i++) 
+    {
+      TMuon* muon = tmp_muons[i];
+      //TMuon* muon = (TMuon*) fMuonArr->At(i);
+      //assert(muon);
+      TLorentzVector muonP4;
+      copy_p4(tmp_muons[i], MUON_MASS, muonP4);
+      //copy_p4(muon, MUON_MASS, muonP4);
+      float qter = 1.;
+      if (isData) 
+      {
+        muonCorr->momcor_data(muonP4, muon->q, 0, qter);
+      } else 
+      {
+        muonCorr->momcor_mc(muonP4, muon->q, 0, qter);
+      }
+      if (muonP4.Pt() > 25 and muon->trkIso/muonP4.Pt() < 0.1) 
+      {
+        muon_pt.push_back(muon->pt);
+        muon_phi.push_back(muon->phi);
+        muon_eta.push_back(muon->eta);
+        muon_pt_corr.push_back(muonP4.Pt());
+        muon_eta_corr.push_back(muonP4.Eta());
+        muon_phi_corr.push_back(muonP4.Phi());
+        muon_trkIso.push_back(muon->trkIso);
+        muon_pfIso.push_back(muonIso(muon));
+        muon_charge.push_back(muon->q);
+        muon_d0.push_back(muon->d0);
+        muon_dz.push_back(muon->dz);
+        muon_sip3d.push_back(muon->sip3d);
+        bool isTight = false;
+        if(fabs(muon->eta) < 2.4 and (muon->typeBits & baconhep::kGlobal) and (muon->typeBits & baconhep::kGlobal) and muon->muNchi2 < 10. and muon->nMatchStn  > 1 and muon->nPixHits > 0 and fabs(muon->d0) < 0.2 and fabs(muon->dz) < 0.5 and muon->nTkLayers > 5 and muon->nValidHits > 0) isTight = true;
+        else isTight = false;
+        muon_id.push_back(isTight); 
+        muon_id_alternate.push_back(isTightMuon(muon, muon->eta, muonP4.Pt())); 
+        muon_id_tightUCSD.push_back(isTightMuonUCSD(muon, muon->eta, muonP4.Pt()));
+        muon_id_tightMIT.push_back(isTightMuonMIT(muon, muon->eta, muonP4.Pt()));
+        muon_id_veryLooseUCSD.push_back(isVeryLooseMuonUCSD(muon, muon->eta, muonP4.Pt()));
+        TLorentzVector muon_p4;
+        muon_p4.SetPtEtaPhiM(muon->pt, muon->eta, muon->phi, MUON_MASS);
+        muon_recoEW.push_back(weights->GetMuonRecoEff(muon_p4));    
+        pair<float, float> trigEff = weights->GetTriggerEffWeight("HLT_IsoMu22_v*", muon_p4);
+        muon_triggerEW.push_back(trigEff.first);
+        bool triggered = false;
+        for (unsigned i = 0; i < triggerNames.size(); ++i) 
+        {
+          triggered |= trigger->passObj(triggerNames[i], 1, muon->hltMatchBits);
         }
-
-        // Apply rochester muon momentum corrections
-        float qter = 1.;
-        if (isData) {
-            muonCorr->momcor_data(muonP4, muon->q, 0, qter);
-        } else {
-            muonCorr->momcor_mc(muonP4, muon->q, 0, qter);
-        }
-
-        // Fill containers
-        if (muon->trkIso/muonP4.Pt() < 0.1) {
-            // For synchronization
-            //cout << muonP4.Pt() << ", " << muon->pt 
-            //     << ", " << muon->eta << ", " << muon->phi 
-            //     << endl;
-
-            if (muonP4.Pt() > 20) {
-                veto_muons.push_back(muonP4);
-            } 
-
-            if (muonP4.Pt() > 25) {
-                muons.push_back(muonP4);
-                muons_iso.push_back(muon->trkIso);
-                muons_q.push_back(muon->q);
-
-                // trigger matching
-                bool triggered = false;
-                for (unsigned i = 0; i < triggerNames.size(); ++i) {
-                    triggered |= trigger->passObj(triggerNames[i], 1, muon->hltMatchBits);
-                }
-                muons_trigger.push_back(triggered);
-            }
-        }
+        muon_trigger.push_back(triggered);
+      }
     }
 
-    /* ELECTRONS */
     std::vector<TLorentzVector> electrons;
-    vector<float> electrons_iso;
-    vector<float> electrons_q;
-    vector<bool> electrons_trigger;
-    for (int i=0; i<fElectronArr->GetEntries(); i++) {
-        TElectron* electron = (TElectron*) fElectronArr->At(i);
-        assert(electron);
-
-        if (
-                electron->pt > 20 
-                && fabs(electron->eta) < 2.5
-                && particleSelector->PassElectronID(electron, cuts->tightElID)
-                && particleSelector->PassElectronIso(electron, cuts->tightElIso, cuts->EAEl)
-           ) {
-            TLorentzVector electronP4;
-            copy_p4(electron, ELE_MASS, electronP4);
-            electrons.push_back(electronP4);
-            electrons_iso.push_back(0.);
-            electrons_q.push_back(electron->q);
-
-            // trigger matching
-            bool triggered = false;
-            for (unsigned i = 0; i < triggerNames.size(); ++i) {
-                triggered |= trigger->passObj(triggerNames[i], 1, electron->hltMatchBits);
-            }
-            electrons_trigger.push_back(triggered);
-        }
+    for (int i=0; i<fElectronArr->GetEntries(); i++) 
+    {
+      TElectron* electron = (TElectron*) fElectronArr->At(i);
+      assert(electron);
+      electron_pt.push_back(electron->pt);
+      electron_phi.push_back(electron->phi);
+      electron_eta.push_back(electron->eta);
+      electron_trkIso.push_back(electron->trkIso);
+      electron_pfIso.push_back(electronIso(electron, fInfo->rhoJet));//change it with the correct defn of iso
+      electron_charge.push_back(electron->q);
+      electron_d0.push_back(electron->d0);
+      electron_dz.push_back(electron->dz);
+      electron_sip3d.push_back(electron->sip3d);
+      electron_id.push_back(isTightElectron(electron));
+      electron_id_tightUCSD.push_back(isTightElectronUCSD(electron)); 
+      electron_id_tightMIT.push_back(isTightElectronMIT(electron));
+      electron_id_veryLooseUCSD.push_back(isVeryLooseElectronUCSD(electron));
+      electron_id_HLTsafeMIT.push_back(isHLTsafeElectronMIT(electron));
+      TLorentzVector electron_p4;
+      electron_p4.SetPtEtaPhiM(electron->pt, electron->eta, electron->phi, ELECTRON_MASS);
+      electron_recoEW.push_back(weights->GetMuonRecoEff(electron_p4));
+      pair<float, float> trigEff = weights->GetTriggerEffWeight("HLT_Ele27_WPTight_Gsf_v*", electron_p4); 
+      electron_triggerEW.push_back(trigEff.first); 
+      bool triggered = false;
+      for (unsigned i = 0; i < triggerNames.size(); ++i)
+      {
+        triggered |= trigger->passObj(triggerNames[i], 1, electron->hltMatchBits);
+      }
+      electron_trigger.push_back(triggered);
     }
-
-    std::sort(electrons.begin(), electrons.end(), P4SortCondition);
-
+ 
     /* JETS */
     TClonesArray* jetCollection;
     jetCollection = fAK4CHSArr;
 
     std::vector<TJet*> jets;
-    std::vector<TJet*> fwdjets;
-    std::vector<TJet*> bjets;
-    std::vector<TJet*> genbjets;
-    std::vector<TJet*> genjets;
     nJets    = 0;
-    nFwdJets = 0;
-    nBJets   = 0;
-    for (int i=0; i < jetCollection->GetEntries(); i++) {
-        TJet* jet = (TJet*) jetCollection->At(i);
-        assert(jet);
 
-        // Prevent overlap of muons and jets
-        TLorentzVector vJet; 
-        vJet.SetPtEtaPhiM(jet->pt, jet->eta, jet->phi, jet->mass);
-        bool muOverlap = false;
-        for (const auto& mu: veto_muons) {
-            if (vJet.DeltaR(mu) < 0.5) {
-                muOverlap = true;
-                break;
-            }
-        }
-        bool elOverlap = false;
-
-        if (!isData) {
-            if (abs(jet->hadronFlavor) == 5) {
-                genbjets.push_back(jet);
-            } else {
-                genjets.push_back(jet);
-            }
-        }
-
-        if ( jet->pt > 30 && particleSelector->PassJetID(jet, cuts->looseJetID)) 
-        {
-          //if (fabs(jet->eta) <= 2.4) 
-          //{ 
-            if (jet->pt > 30 && !muOverlap && !elOverlap) 
-            {
-              jets.push_back(jet);
-              ++nJets;
-              if(jet->csv > 0.5426)
-              {
-                bjets.push_back(jet);
-                ++nBJets;
-              }
-            }
-              //if (isData) {
-              /*nBJets += 1;
-              if (jet->csv > 0.5426) 
-              {
-                bjets.push_back(jet);
-                nBJets+=2;
-              } 
-              else 
-              {
-                jets.push_back(jet);
-                ++nJets;
-              }*/
-        } /*else {
-//                        if (particleSelector->BTagModifier(jet, "CSVL")) { 
-//                            bjets.push_back(jet);
-//                            ++nBJets;
-//                        } else {
-//                            jets.push_back(jet);
-//                            ++nJets;
-//                        }
-//                    }*/
-//                }
-            //} 
-            /*else 
-            {
-              if (jet->pt > 30) 
-              {
-                fwdjets.push_back(jet);
-                ++nFwdJets;
-              }
-            }*/
-          
-       }
-    //}
     //Fat jet info//
-    
     TClonesArray* jetAK8Collection;
     jetAK8Collection = fAddAK8CHSArr;
-    std::vector<pair<TJet*, TAddJet*> >  fatJets;
-    nfatJets=0;
+
     for (int i=0; i < jetAK8Collection->GetEntries(); i++)
-    {
+    {   
       TAddJet* ak8Jet = (TAddJet*) jetAK8Collection->At(i);
       assert(ak8Jet);
       TJet *jet    = (TJet*)fAK4CHSArr->At(ak8Jet->index);
-      // Prevent overlap of muons and jets
-      TLorentzVector vJet;
-      vJet.SetPtEtaPhiM(jet->pt, jet->eta, jet->phi, jet->mass);
-      bool muOverlap = false;
-      for (const auto& mu: veto_muons) {
-        if (vJet.DeltaR(mu) < 0.5) {
-           muOverlap = true;
-           break;
-        }
-      }
-      bool elOverlap = false;
-      if (jet->pt > 180 
-          && fabs(jet->eta < 4.7)
-          && particleSelector->PassJetID(jet, cuts->looseJetID)
-          && !muOverlap
-          && !elOverlap) 
-       {
-         ++nfatJets;
-         fatJets.push_back(std::make_pair(jet, ak8Jet));
-       } 
-    } 
-    
-    std::sort(fwdjets.begin(), fwdjets.end(), sort_by_higher_pt<TJet>);
-    std::sort(bjets.begin(), bjets.end(), sort_by_higher_pt<TJet>);
-    std::sort(genjets.begin(), genjets.end(), sort_by_higher_pt<TJet>);
-    std::sort(genbjets.begin(), genbjets.end(), sort_by_higher_pt<TJet>);
-    std::sort(fatJets.begin(), fatJets.end(), sort_by_higher_pt_pair);
-   
-    // Add additional b jets to the central jet collection
-    if (bjets.size() > 1) {
-        jets.insert(jets.end(), bjets.begin()+1, bjets.end());
-    }
-    std::sort(jets.begin(), jets.end(), sort_by_higher_pt<TJet>);
-
-    if (!isData) 
-    {
-      unsigned count = 0;
-      for (int i = 0; i < fGenParticleArr->GetEntries(); ++i) 
+      if(jet->pt > 20 && fabs(jet->eta) < 4.7 && particleSelector->PassJetID(jet, cuts->looseJetID))
       {
-        TGenParticle* particle = (TGenParticle*) fGenParticleArr->At(i);
-        if (particle->status == 23 
-            && (abs(particle->pdgId) < 6 || particle->pdgId == 21) 
-            && particle->parent != -2) 
-         {
-            ++count;
-         }
-       }
-       nPartons = count; // This is saved for reweighting inclusive DY and combining it with parton binned DY
-    } 
-    else 
+        ak8jet_prunMass.push_back(ak8Jet->mass_prun);
+        ak8jet_trimMass.push_back(ak8Jet->mass_trim);
+        ak8jet_sd0.push_back(ak8Jet->mass_sd0);
+        ak8jet_tau1.push_back(ak8Jet->tau1);
+        ak8jet_tau2.push_back(ak8Jet->tau2);
+        ak8jet_pt.push_back(jet->pt);
+        ak8jet_phi.push_back(jet->phi);
+        ak8jet_eta.push_back(jet->eta);
+      }
+    }
+    //ak4 jet info//    
+    for (int i=0; i < jetCollection->GetEntries(); i++) 
     {
-      nPartons = 0;
-    } 
-
-    /* MET */
+      TJet* jet = (TJet*) jetCollection->At(i);
+      assert(jet);
+      if(jet->pt > 20 && fabs(jet->eta) < 4.7 && particleSelector->PassJetID(jet, cuts->looseJetID))
+      {
+        jet_pt.push_back(jet->pt);
+        jet_eta.push_back(jet->eta);
+        jet_phi.push_back(jet->phi);
+        jet_mass.push_back(jet->mass);
+        jet_csv.push_back(jet->csv);
+      }  
+    }
+  
     met    = fInfo->pfMETC;
     metPhi = fInfo->pfMETCphi;
 
-    ///////////////////////////////
-    /* Apply analysis selections */
-    ///////////////////////////////
-
-    nMuons     = muons.size();
-    nElectrons = electrons.size();
-
-    if (params->selection == "mumu") {
-        if (muons.size() < 2)
-            return kTRUE;
-        hTotalEvents->Fill(5);
-
-        if (muons[0].Pt() < 25 || fabs(muons[0].Eta()) > 2.1)
-            return kTRUE;
-        hTotalEvents->Fill(6);
-
-        TLorentzVector dimuon;
-        dimuon = muons[0] + muons[1];
-        //if (dimuon.M() < 8. || dimuon.M() > 70.)
-            //return kTRUE;
-        hTotalEvents->Fill(7);
-        
-        leptonOneP4      = muons[0];
-        leptonOneIso     = muons_iso[0];
-        leptonOneQ       = muons_q[0];
-        leptonOneTrigger = muons_trigger[0];
-        leptonOneFlavor  = 1;
-        
-        leptonTwoP4      = muons[1];
-        leptonTwoIso     = muons_iso[1];
-        leptonTwoQ       = muons_q[1];
-        leptonTwoTrigger = muons_trigger[1];
-        leptonTwoFlavor  = 1;
-         
-        if (!isData) {
-            eventWeight *= weights->GetMuonRecoEff(muons[0]);
-            eventWeight *= weights->GetMuonRecoEff(muons[1]);
-
-            // trigger weight
-            //applies to b,c,d
-            pair<float, float> trigEff1 = weights->GetTriggerEffWeight("HLT_IsoMu22_v*", muons[0]);
-            pair<float, float> trigEff2 = weights->GetTriggerEffWeight("HLT_IsoMu22_v*", muons[1]);
-            //applies to e, f, g, h
-            //pair<float, float> trigEff1 = weights->GetTriggerEffWeight("HLT_IsoMu24_v*", muons[0]);
-            //pair<float, float> trigEff2 = weights->GetTriggerEffWeight("HLT_IsoMu24_v*", muons[1]);
-            eventWeight *= 1 - (1 - trigEff1.first)*(1 - trigEff2.first);
-        }
-
-    } else if (params->selection == "ee") {
-
-        if (electrons.size() != 2)
-            return kTRUE;
-        hTotalEvents->Fill(5);
-
-        TLorentzVector dielectron;
-        dielectron = electrons[0] + electrons[1];
-        //if (dielectron.M() < 8. || dielectron.M() > 70.)
-            //return kTRUE;
-        hTotalEvents->Fill(6);
-
-        leptonOneP4      = electrons[0];
-        leptonOneIso     = electrons_iso[0];
-        leptonOneQ       = electrons_q[0];
-        leptonOneTrigger = electrons_trigger[0];
-        leptonOneFlavor  = 0;
-
-        leptonTwoP4      = electrons[1];
-        leptonTwoIso     = electrons_iso[1];
-        leptonTwoQ       = electrons_q[1];
-        leptonTwoTrigger = electrons_trigger[1];
-        leptonTwoFlavor  = 0;
-    } else if (params->selection == "emu") {
-
-        if (muons.size() != 1 || electrons.size() != 1)
-            //return kTRUE;
-        hTotalEvents->Fill(5);
-
-        TLorentzVector dilepton;
-        dilepton = muons[0] + electrons[0];
-        if (dilepton.M() < 12 || dilepton.M() > 70)
-            //return kTRUE;
-        hTotalEvents->Fill(6);
-
-        leptonOneP4      = muons[0];
-        leptonOneIso     = muons_iso[0];
-        leptonOneQ       = muons_q[0];
-        leptonOneTrigger = muons_trigger[0];
-        leptonOneFlavor  = 0;
-
-        leptonTwoP4      = electrons[0];
-        leptonTwoIso     = electrons_iso[0];
-        leptonTwoQ       = electrons_q[0];
-        leptonTwoTrigger = electrons_trigger[0];
-        leptonTwoFlavor  = 1;
-
-        if (!isData && false) {
-            eventWeight *= weights->GetMuonRecoEff(muons[0]);
-
-            // trigger efficiency
-            pair<float, float> trigEff = weights->GetTriggerEffWeight("HLT_IsoMu24_eta2p1_v*", muons[0]);
-            eventWeight *= trigEff.first/trigEff.second;
-        }
-    } 
-
-
-    ///////////////////
-    // Fill jet info //
-    ///////////////////
-
-    if (bjets.size() > 0) {
-        bjetP4.SetPtEtaPhiM(bjets[0]->pt, bjets[0]->eta, bjets[0]->phi, bjets[0]->mass);
-        bjetD0     = bjets[0]->d0;
-        bjetTag    = bjets[0]->csv;
-        bjetFlavor = bjets[0]->hadronFlavor;
-    } else {
-        bjetP4.SetPtEtaPhiM(0., 0., 0., 0.);
-        bjetD0     = 0.;
-        bjetTag    = 0.;
-        bjetFlavor = 0.;
-    }
-
-    if (fwdjets.size() > 0) {
-        jetP4.SetPtEtaPhiM(fwdjets[0]->pt, fwdjets[0]->eta, fwdjets[0]->phi, fwdjets[0]->mass);
-        jetD0     = fwdjets[0]->d0;
-        jetTag    = 0.;
-        jetFlavor = fwdjets[0]->hadronFlavor;
-    } else if (jets.size() > 0) {
-        jetP4.SetPtEtaPhiM(jets[0]->pt, jets[0]->eta, jets[0]->phi, jets[0]->mass);
-        jetD0     = jets[0]->d0;
-        jetTag    = jets[0]->csv;
-        jetFlavor = jets[0]->hadronFlavor;
-        if(jets.size() > 1) {
-          subLeadingJetP4.SetPtEtaPhiM(jets[1]->pt, jets[1]->eta, jets[1]->phi, jets[1]->mass);
-          subLeadingJetD0 = jets[1]->d0;
-          subLeadingJetTag = jets[1]->csv;
-          subLeadingJetFlavor = jets[1]->hadronFlavor;
-        }
-        else {
-          subLeadingJetP4.SetPtEtaPhiM(0., 0., 0., 0.);
-          subLeadingJetD0 = 0.;
-          subLeadingJetTag = 0.;
-          subLeadingJetFlavor = 0.;
-        }
-    } else {
-        jetP4.SetPtEtaPhiM(0., 0., 0., 0.);
-        jetD0     = 0.;
-        jetTag    = 0.;
-        jetFlavor = 0.;
-    } 
-
-    if (genbjets.size() > 0 && !isData) {
-        genBJetP4.SetPtEtaPhiM(genbjets[0]->genpt, genbjets[0]->geneta, genbjets[0]->genphi, genbjets[0]->genm);
-        genBJetTag = genbjets[0]->csv;
-    } else {
-        genBJetP4.SetPtEtaPhiM(0., 0., 0., 0.);
-        genBJetTag = 0;
-    }
-
-    if (genjets.size() > 0 && !isData) {
-        genJetP4.SetPtEtaPhiM(genjets[0]->genpt, genjets[0]->geneta, genjets[0]->genphi, genjets[0]->genm);
-        genJetTag = genjets[0]->csv;
-    } else {
-        genJetP4.SetPtEtaPhiM(0., 0., 0., 0.);
-        genJetTag = 0;
-    }
-
-    if(fatJets.size() > 0)
-    {
-      fatJetP4.SetPtEtaPhiM(fatJets[0].first->pt, fatJets[0].first->eta, fatJets[0].first->phi, fatJets[0].first->mass);      
-      fatJetTrimMass = fatJets[0].second->mass_trim;
-      fatJetPrunMass = fatJets[0].second->mass_prun;
-      fatJetSD0 = fatJets[0].second->mass_sd0;
-      fatJetTau1 = fatJets[0].second->tau1;
-      fatJetTau2 = fatJets[0].second->tau2;
-      fatJetTau3 = fatJets[0].second->tau3;
-    }
-    else
-    {
-      fatJetP4.SetPtEtaPhiM(0., 0., 0., 0.);
-      fatJetTrimMass = 0.0;
-      fatJetPrunMass = 0.0;
-      fatJetSD0 = 0.0;
-      fatJetTau1 = 0.0;
-      fatJetTau2 = 0.0;
-      fatJetTau3 = 0.0;
-    }
-
+    hTotalEvents->Fill(5);
+    
     outTree->Fill();
     this->passedEvents++;
     return kTRUE;
 }
+
 
 void FatJetAnalyzer::Terminate()
 {
@@ -692,8 +463,237 @@ void FatJetAnalyzer::ReportPostTerminate()
     std::cout << "  ============================================================" << std::endl;
 }
 
+Bool_t FatJetAnalyzer::isTightMuon(baconhep::TMuon* muon, float muEta, float muPt)
+{
+  if (muPt < 5)                                   return false;
+  if (fabs(muEta) > 2.4 )                         return false;       
+  if (fabs(muEta) < 2.4)
+  {
+    if(not (muon->typeBits & baconhep::kGlobal) ) return false;  
+    if(not (muon->typeBits & baconhep::kPFMuon) ) return false;
+    if(muon->muNchi2          >= 10)              return false;
+    if(muon->nMatchStn <= 1)                      return false;
+    if(muon->nPixHits  <= 0)                      return false; 
+    if(muon->nTkLayers <= 5)                      return false;
+    if(muon->nValidHits <= 0)                     return false;
+    //if(fabs(muon->d0) > 0.2)                      return false;
+    //if(fabs(muon->dz) > 0.5)                      return false;  
+  }
+  return true; 
+}
 
-// _____________________________________________________________________________
+Bool_t FatJetAnalyzer::isTightMuonMIT(baconhep::TMuon* muon, float muEta, float muPt)
+{
+  if (muPt < 5)                                   return false;
+  if (fabs(muEta) > 2.4 )                         return false;
+  if (fabs(muEta) < 2.4)
+  {
+    if(not (muon->typeBits & baconhep::kGlobal) ) return false;
+    if(not (muon->typeBits & baconhep::kPFMuon) ) return false;
+    if(muon->muNchi2          >= 10)              return false;
+    if(muon->nMatchStn <= 1)                      return false;
+    if(muon->nPixHits  <= 0)                      return false;
+    if(muon->nTkLayers <= 5)                      return false;
+    if(muon->nValidHits <= 0)                     return false;
+    //if(fabs(muon->d0) > 0.02)                     return false;
+    //if(fabs(muon->dz) > 0.1)                      return false;
+  }
+  return true;
+}
+
+
+Float_t FatJetAnalyzer::muonIso(baconhep::TMuon* muon)
+{
+  return (muon->chHadIso + std::max( 0., muon->neuHadIso + muon->gammaIso - 0.5*muon->puIso))/muon->pt; //what is muon->pfPt?
+}
+
+Float_t FatJetAnalyzer::electronIso(baconhep::TElectron* electron, float rhoFactor)//iso value set at 0.0588
+{
+  float EA = 0;  
+  EAEle[0] = 0.1703;//0.13;
+  EAEle[1] = 0.1715;//0.14;
+  EAEle[2] = 0.1213;//0.07;
+  EAEle[3] = 0.1230;//0.09;
+  EAEle[4] = 0.1635;//0.11;
+  EAEle[5] = 0.1937;//0.11;
+  EAEle[6] = 0.2393;//0.14;
+  if (fabs(electron->eta)  <  1.0) EA = EAEle[0];
+  else if(fabs(electron->eta) < 1.479) EA = EAEle[1]; 
+  else if(fabs(electron->eta) < 2.0) EA = EAEle[2];   
+  else if(fabs(electron->eta) < 2.2) EA = EAEle[3];
+  else if(fabs(electron->eta) < 2.3) EA = EAEle[4]; 
+  else if(fabs(electron->eta) < 2.4) EA = EAEle[5];
+  else if(fabs(electron->eta) > 2.4) EA = EAEle[6];
+  
+  return (electron->chHadIso + std::max(0., (double)electron->neuHadIso + electron->gammaIso - rhoFactor*EA))/electron->pt; 
+}
+
+Bool_t FatJetAnalyzer::isTightElectron(baconhep::TElectron* electron)
+{
+  float invE_invP = fabs(1./ (electron->eoverp * electron->pt) - electron->eoverp * 1./ (electron->eoverp * electron->pt));
+  if(fabs(electron->scEta) > 2.5) return false;
+  if(fabs(electron->scEta) < 1.479)//barrel
+  {
+    if(electron->sieie                       > 0.00998) return false;
+    if(fabs(electron->dEtaInSeed)            > 0.00308) return false;
+    if(fabs(electron->dPhiIn)                > 0.0816 ) return false;
+    if(electron->hovere                      > 0.0414 ) return false;
+    if(invE_invP                             > 0.0129 ) return false;
+    if(electron->nMissingHits                > 1.0    ) return false;
+    if(electron->isConv                               ) return false;
+    //if(fabs(electron->d0)                    > 0.05   ) return false;
+    //if(fabs(electron->dz)                    > 0.1    ) return false; 
+  }
+  else if(fabs(electron->scEta) > 1.479)//endcap
+  {
+    if(electron->sieie                 > 0.0292 ) return false; 
+    if(fabs(electron->dEtaInSeed)      > 0.00605) return false;
+    if(fabs(electron->dPhiIn)          > 0.0394 ) return false;
+    if(electron->hovere                > 0.0641 ) return false;
+    if(invE_invP                       > 0.0129 ) return false;  
+    if(electron->nMissingHits          > 1.0    ) return false;
+    if(electron->isConv                         ) return false;
+    //if(fabs(electron->d0)              > 0.05   ) return false;//0.10
+    //if(fabs(electron->dz)              > 0.1    ) return false;//0.20 
+  }
+  return true;
+}
+
+Bool_t FatJetAnalyzer::isTightElectronMIT(baconhep::TElectron* electron)
+{ 
+  float invE_invP = fabs(1./ (electron->eoverp * electron->pt) - electron->eoverp * 1./ (electron->eoverp * electron->pt));
+  if(fabs(electron->scEta) > 2.5) return false;
+  if(fabs(electron->scEta) < 1.479)//barrel
+  { 
+    if(electron->sieie                       > 0.00998) return false;
+    if(fabs(electron->dEtaInSeed)            > 0.00308) return false;
+    if(fabs(electron->dPhiIn)                > 0.0816 ) return false;
+    if(electron->hovere                      > 0.0414 ) return false;
+    if(invE_invP                             > 0.0129 ) return false;
+    if(electron->nMissingHits                >= 1     ) return false;
+    if(electron->isConv                               ) return false;
+    //if(fabs(electron->d0)                    > 0.05   ) return false;
+    //if(fabs(electron->dz)                    > 0.1    ) return false;
+  }
+  else if(fabs(electron->scEta) > 1.479)//endcap
+  { 
+    if(electron->sieie                       > 0.0292 ) return false;
+    if(fabs(electron->dEtaInSeed)            > 0.00605) return false;
+    if(fabs(electron->dPhiIn)                > 0.0394 ) return false;
+    if(electron->hovere                      > 0.0641 ) return false;
+    if(invE_invP                             > 0.0129 ) return false;
+    if(electron->nMissingHits                >= 1     ) return false;
+    if(electron->isConv                               ) return false;
+    //if(fabs(electron->d0)                    > 0.05   ) return false;//0.10
+    //if(fabs(electron->dz)                    > 0.1    ) return false;//0.20 
+  }
+  return true;
+}
+
+Bool_t FatJetAnalyzer::isHLTsafeElectronMIT(baconhep::TElectron* electron)
+{
+  float invE_invP = fabs(1./ (electron->eoverp * electron->pt) - electron->eoverp * 1./ (electron->eoverp * electron->pt));
+  if(fabs(electron->scEta) > 2.5) return false;
+  if(fabs(electron->scEta) < 1.479)//barrel
+  {
+    if(electron->sieie                       > 0.011  ) return false;
+    if(fabs(electron->dEtaInSeed)            > 0.004  ) return false;
+    if(fabs(electron->dPhiIn)                > 0.020  ) return false;
+    if(electron->hovere                      > 0.060  ) return false;
+    if(invE_invP                             > 0.013  ) return false;
+    if(electron->nMissingHits                > 1      ) return false;
+    if(electron->isConv                               ) return false;
+    if(electron->ecalPFClusIso               > 0.160  ) return false;
+    if(electron->hcalPFClusIso               > 0.120  ) return false; 
+  }
+  else if(fabs(electron->scEta) > 1.479)//endcap
+  {
+    if(electron->sieie                       > 0.0292 ) return false;
+    if(fabs(electron->dEtaInSeed)            > 0.00605) return false;
+    if(fabs(electron->dPhiIn)                > 0.0394 ) return false;
+    if(electron->hovere                      > 0.0641 ) return false;
+    if(invE_invP                             > 0.0129 ) return false;
+    if(electron->nMissingHits                >= 1     ) return false;
+    if(electron->isConv                               ) return false;
+    if(electron->ecalPFClusIso               > 0.120  ) return false;
+    if(electron->hcalPFClusIso               > 0.120  ) return false;
+  }
+  return true;
+}
+
+
+Bool_t FatJetAnalyzer::isTightElectronUCSD(baconhep::TElectron* electron)
+{
+  //double ip3d = sqrt((electron->d0)*(electron->d0) + (electron->dz)*(electron->dz));
+  if(fabs(electron->scEta) > 2.5) return false;  
+  if(fabs(electron->scEta) < 1.479)//barrel
+  {
+    if(electron->nMissingHits                >= 1     ) return false;
+    //if(ip3d                                  > 0.015  ) return false;    
+    //if(electron->sip3d                       > 4      ) return false;
+    //if(fabs(electron->d0)                    > 0.05   ) return false;
+    //if(fabs(electron->dz)                    > 0.1    ) return false;
+  }
+  else if(fabs(electron->scEta) > 1.479)//endcap
+  {
+    if(electron->nMissingHits                >= 1     ) return false;
+    //if(ip3d                                  > 0.015  ) return false;
+    //if(electron->sip3d                       > 4      ) return false;
+    //if(fabs(electron->d0)                    > 0.05   ) return false;
+    //if(fabs(electron->dz)                    > 0.1    ) return false;
+  }
+  return true;
+}
+
+//UCSD electron id loose defintion is tight + loosened isolation 
+
+Bool_t FatJetAnalyzer::isVeryLooseElectronUCSD(baconhep::TElectron* electron)
+{
+  if(fabs(electron->scEta) > 2.5)                       return false;
+  if(fabs(electron->scEta) < 1.479)//barrel
+  {
+    if(electron->nMissingHits                > 2      ) return false;
+    //if(fabs(electron->d0)                    > 0.05   ) return false;
+    //if(fabs(electron->dz)                    > 0.1    ) return false;
+  }
+  else if(fabs(electron->scEta) > 1.479)//endcap
+  {
+    if(electron->nMissingHits                > 3      ) return false;
+    //if(fabs(electron->d0)                    > 0.05   ) return false;
+    //if(fabs(electron->dz)                    > 0.1    ) return false;
+  }
+  return true;
+}  
+
+Bool_t FatJetAnalyzer::isTightMuonUCSD(baconhep::TMuon* muon, float muEta, float muPt)
+{
+  double ip3d = sqrt(muon->d0*muon->d0 + muon->dz*muon->dz);
+  if(muPt < 5)                                       return false;
+  if(fabs(muEta) > 2.4  )                            return false;  
+  if(fabs(muEta) < 2.4)
+  {
+    if(ip3d        > 0.015  )                        return false; 
+    if(muon->sip3d > 4      )                        return false;
+    if(fabs(muon->d0) > 0.05)                        return false;
+    if(fabs(muon->dz) > 0.1 )                        return false; 
+  }
+  return true;
+}
+
+//UCSD muon id loose defintion is tight + loosened isolation 
+
+Bool_t FatJetAnalyzer::isVeryLooseMuonUCSD(baconhep::TMuon* muon, float muEta, float muPt)
+{
+  if(muPt < 5)                                       return false;
+  if (fabs(muEta) > 2.4  )                           return false; 
+  if (fabs(muEta) < 2.4)
+  { 
+    if(fabs(muon->d0) > 0.05)                        return false;
+    if(fabs(muon->dz) > 0.1 )                        return false;
+  }
+  return true;
+}
+
 // Main function
 
 int main(int argc, char **argv)
