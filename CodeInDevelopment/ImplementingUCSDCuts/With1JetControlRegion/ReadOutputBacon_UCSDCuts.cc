@@ -202,7 +202,7 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
   HistCollection mumuHistCut11;
   initializeHistCollection(mumuHistCut11, "TTbarCR2b_MuMu");
   HistCollection mumuHistCut12;
-  initializeHistCollection(mumuHistCut12, "IpIsoTuning_MuMu");
+  initializeHistCollection(mumuHistCut12, "IpIsoTuning1Jet_MuMu");
 
   HistCollection elelHistCut1;
   initializeHistCollection(elelHistCut1, "2SSTL_ElEl");
@@ -227,7 +227,7 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
   HistCollection elelHistCut11;
   initializeHistCollection(elelHistCut11, "TTbarCR2b_ElEl");
   HistCollection elelHistCut12;
-  initializeHistCollection(elelHistCut12, "IpIsoTuning_ElEl");
+  initializeHistCollection(elelHistCut12, "IpIsoTuning1Jet_ElEl");
 
   HistCollection elmuHistCut1;
   initializeHistCollection(elmuHistCut1, "2SSTL_ElMu");
@@ -254,7 +254,7 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
   HistCollection elmuHistCut11;
   initializeHistCollection(elmuHistCut11, "TTbarCR2b_ElMu");
   HistCollection elmuHistCut13;
-  initializeHistCollection(elmuHistCut13, "IpIsoTuning_ElMu");
+  initializeHistCollection(elmuHistCut13, "IpIsoTuning1Jet_ElMu");
 
 
   TH1D *h_TotalEvents_MuMu = new TH1D("h_TotalEvents_MuMu", "h_TotalEvents_MuMu", 15, -0.5, 14.5); h_TotalEvents_MuMu->Sumw2();
@@ -551,11 +551,6 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
       }//bjet 4 vector
       if(v_jets.at(iselbJet).jetCSV > 0.8484) nbJets_tight++;
     }
-    if(nbJets_loose != (int)v_selectedBJets.size())
-    {
-      std::cout << "nbJets_loose = " << nbJets_loose << std::endl;
-      std::cout << "v_selectedBJets.size() = " << v_selectedBJets.size() << std::endl;
-    }
     double mindR = 0.8;
     //double mindR = 6.77; //sqrt(3.14^2 + 6^2)
     int i_Jet1 = -1;
@@ -603,8 +598,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     if(v_muIpIsoTune.size()==2 and v_electrons.size()==0 and v_selectedJets.size()==1)
     {
       double eventWeightMu = 1.0;
-      if(MCSample=="Signal")eventWeightMu = v_muIpIsoTune.at(0).recoEW*v_muIpIsoTune.at(1).recoEW*(1 - (1 - v_muIpIsoTune.at(0).triggerEW)*(1 - v_muIpIsoTune.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightMu = v_muIpIsoTune.at(0).recoEW*v_muIpIsoTune.at(1).recoEW*(1 - (1 - v_muIpIsoTune.at(0).triggerEW)*(1 - v_muIpIsoTune.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightMu = weightMu(v_muIpIsoTune);
+      else if(MCSample=="MC") eventWeightMu = weightMu(v_muIpIsoTune)*eventWeight;
       double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
       jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
       if(v_muIpIsoTune.at(0).charge*v_muIpIsoTune.at(1).charge==1 and v_muIpIsoTune.at(0).pt > 30.0 and v_muIpIsoTune.at(1).pt > 30.0)
@@ -623,9 +618,9 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     }
     else if(v_muIpIsoTune.size()==1 and v_elIpIsoTune.size()==1 and v_selectedJets.size()==1)
     {   
-      double eventWeightElMu = 1.0;     
-      if(MCSample=="Signal")eventWeightElMu = v_muIpIsoTune.at(0).recoEW*v_elIpIsoTune.at(0).recoEW*(1 - (1 - v_muIpIsoTune.at(0).triggerEW)*(1 - v_elIpIsoTune.at(0).triggerEW));
-      else if(MCSample=="MC")eventWeightElMu = v_muIpIsoTune.at(0).recoEW*v_elIpIsoTune.at(0).recoEW*(1 - (1 - v_muIpIsoTune.at(0).triggerEW)*(1 - v_elIpIsoTune.at(0).triggerEW))*eventWeight;
+      double eventWeightElMu = 1.0;
+      if(MCSample=="Signal") eventWeightElMu = weightElMu(v_elIpIsoTune, v_muIpIsoTune);
+      else if(MCSample=="MC") eventWeightElMu = weightElMu(v_elIpIsoTune, v_muIpIsoTune)*eventWeight;     
       double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
       jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
       if(v_muIpIsoTune.at(0).charge*v_elIpIsoTune.at(0).charge==1 and v_muIpIsoTune.at(0).pt > 30.0 and v_elIpIsoTune.at(0).pt > 30.0)
@@ -644,8 +639,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_elIpIsoTune.size()==2 and v_muons.size()==0 and v_selectedJets.size()==1)
     {
       double eventWeightEl = 1.0;
-      if(MCSample=="Signal")eventWeightEl = v_elIpIsoTune.at(0).recoEW*v_elIpIsoTune.at(1).recoEW*(1 - (1 - v_elIpIsoTune.at(0).triggerEW)*(1 - v_elIpIsoTune.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightEl = v_elIpIsoTune.at(0).recoEW*v_elIpIsoTune.at(1).recoEW*(1 - (1 - v_elIpIsoTune.at(0).triggerEW)*(1 - v_elIpIsoTune.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightEl = weightEl(v_elIpIsoTune);
+      else if(MCSample=="MC") eventWeightEl = weightEl(v_elIpIsoTune)*eventWeight;
       double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
       jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
       if(v_elIpIsoTune.at(0).charge*v_elIpIsoTune.at(1).charge==1 and v_elIpIsoTune.at(0).pt > 30.0 and v_elIpIsoTune.at(1).pt > 30.0)
@@ -666,8 +661,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     if(v_muplotIdIso.size()==2 and v_electrons.size()==0)
     {
       double eventWeightMu = 1.0;
-      if(MCSample=="Signal")eventWeightMu = v_muplotIdIso.at(0).recoEW*v_muplotIdIso.at(1).recoEW*(1 - (1 - v_muplotIdIso.at(0).triggerEW)*(1 - v_muplotIdIso.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightMu = v_muplotIdIso.at(0).recoEW*v_muplotIdIso.at(1).recoEW*(1 - (1 - v_muplotIdIso.at(0).triggerEW)*(1 - v_muplotIdIso.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightMu = weightMu(v_muplotIdIso);
+      else if(MCSample=="MC") eventWeightMu = weightMu(v_muplotIdIso)*eventWeight;
       if(v_muplotIdIso.at(0).charge*v_muplotIdIso.at(1).charge==1 and v_muplotIdIso.at(0).pt > 30.0 and v_muplotIdIso.at(1).pt > 30.0) 
       {
         h_leading_mu_IdpfIso_MuMu->Fill(v_muplotIdIso.at(0).pfiso, eventWeightMu);
@@ -679,8 +674,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_muplotIdIso.size()==1 and v_elplotIdIso.size()==1)
     { 
       double eventWeightElMu = 1.0;
-      if(MCSample=="Signal")eventWeightElMu = v_elplotIdIso.at(0).recoEW*v_muplotIdIso.at(0).recoEW*(1 - (1 - v_elplotIdIso.at(0).triggerEW)*(1 - v_muplotIdIso.at(0).triggerEW));
-      else if(MCSample=="MC")eventWeightElMu = v_elplotIdIso.at(0).recoEW*v_muplotIdIso.at(0).recoEW*(1 - (1 - v_elplotIdIso.at(0).triggerEW)*(1 - v_muplotIdIso.at(0).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightElMu = weightElMu(v_elplotIdIso, v_muplotIdIso);
+      else if(MCSample=="MC") eventWeightElMu = weightElMu(v_elplotIdIso, v_muplotIdIso)*eventWeight;
       if(v_elplotIdIso.at(0).charge*v_muplotIdIso.at(0).charge==1 and v_elplotIdIso.at(0).pt > 30.0 and v_muplotIdIso.at(0).pt > 30.0)
       {
         h_leading_mu_IdpfIso_ElMu->Fill(v_muplotIdIso.at(0).pfiso, eventWeightElMu);
@@ -692,8 +687,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_elplotIdIso.size()==2 and v_muons.size()==0)
     {
       double eventWeightEl = 1.0;
-      if(MCSample=="Signal")eventWeightEl = v_elplotIdIso.at(0).recoEW*v_elplotIdIso.at(1).recoEW*(1 - (1 - v_elplotIdIso.at(0).triggerEW)*(1 - v_elplotIdIso.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightEl = v_elplotIdIso.at(0).recoEW*v_elplotIdIso.at(1).recoEW*(1 - (1 - v_elplotIdIso.at(0).triggerEW)*(1 - v_elplotIdIso.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightEl = weightEl(v_elplotIdIso);
+      else if(MCSample=="MC") eventWeightEl = weightEl(v_elplotIdIso)*eventWeight;
       if(v_elplotIdIso.at(0).charge*v_elplotIdIso.at(1).charge==1 and v_elplotIdIso.at(0).pt > 30.0 and v_elplotIdIso.at(1).pt > 30.0)
       {
         h_leading_el_IdpfIso_ElEl->Fill(v_elplotIdIso.at(0).pfiso, eventWeightEl);
@@ -706,8 +701,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     if(v_muplotIso.size()==2 and v_electrons.size()==0)
     {
       double eventWeightMu = 1.0;
-      if(MCSample=="Signal")eventWeightMu = v_muplotIso.at(0).recoEW*v_muplotIso.at(1).recoEW*(1 - (1 - v_muplotIso.at(0).triggerEW)*(1 - v_muplotIso.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightMu = v_muplotIso.at(0).recoEW*v_muplotIso.at(1).recoEW*(1 - (1 - v_muplotIso.at(0).triggerEW)*(1 - v_muplotIso.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightMu = weightMu(v_muplotIso);
+      else if(MCSample=="MC") eventWeightMu = weightMu(v_muplotIso)*eventWeight;
       if(v_muplotIso.at(0).charge*v_muplotIso.at(1).charge==1 and v_muplotIso.at(0).pt > 30.0 and v_muplotIso.at(1).pt > 30.0)
       {
         h_leading_mu_pfIso_MuMu->Fill(v_muplotIso.at(0).pfiso, eventWeightMu);
@@ -719,8 +714,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_muplotIso.size()==1 and v_elplotIso.size()==1)
     {
       double eventWeightElMu = 1.0;
-      if(MCSample=="Signal")eventWeightElMu = v_elplotIso.at(0).recoEW*v_muplotIso.at(0).recoEW*(1 - (1 - v_elplotIso.at(0).triggerEW)*(1 - v_muplotIso.at(0).triggerEW));
-      else if(MCSample=="MC")eventWeightElMu = v_elplotIso.at(0).recoEW*v_muplotIso.at(0).recoEW*(1 - (1 - v_elplotIso.at(0).triggerEW)*(1 - v_muplotIso.at(0).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightElMu = weightElMu(v_elplotIso, v_muplotIso);
+      else if(MCSample=="MC") eventWeightElMu = weightElMu(v_elplotIso, v_muplotIso)*eventWeight;
       if(v_elplotIso.at(0).charge*v_muplotIso.at(0).charge==1 and v_elplotIso.at(0).pt > 30.0 and v_muplotIso.at(0).pt > 30.0)
       {
         h_leading_mu_pfIso_ElMu->Fill(v_muplotIso.at(0).pfiso, eventWeightElMu);
@@ -732,8 +727,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_elplotIso.size()==2 and v_muons.size()==0)
     {
       double eventWeightEl = 1.0;
-      if(MCSample=="Signal")eventWeightEl = v_elplotIso.at(0).recoEW*v_elplotIso.at(1).recoEW*(1 - (1 - v_elplotIso.at(0).triggerEW)*(1 - v_elplotIso.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightEl = v_elplotIso.at(0).recoEW*v_elplotIso.at(1).recoEW*(1 - (1 - v_elplotIso.at(0).triggerEW)*(1 - v_elplotIso.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightEl = weightEl(v_elplotIso);
+      else if(MCSample=="MC") eventWeightEl = weightEl(v_elplotIso)*eventWeight;
       if(v_elplotIso.at(0).charge*v_elplotIso.at(1).charge==1 and v_elplotIso.at(0).pt > 30.0 and v_elplotIso.at(1).pt > 30.0)
       {
         h_leading_el_pfIso_ElEl->Fill(v_elplotIso.at(0).pfiso, eventWeightEl);
@@ -746,8 +741,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     if(v_muplotIdIsoIp.size()==2 and v_electrons.size()==0)
     {
       double eventWeightMu = 1.0;
-      if(MCSample=="Signal")eventWeightMu = v_muplotIdIsoIp.at(0).recoEW*v_muplotIdIsoIp.at(1).recoEW*(1 - (1 - v_muplotIdIsoIp.at(0).triggerEW)*(1 - v_muplotIdIsoIp.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightMu = v_muplotIdIsoIp.at(0).recoEW*v_muplotIdIsoIp.at(1).recoEW*(1 - (1 - v_muplotIdIsoIp.at(0).triggerEW)*(1 - v_muplotIdIsoIp.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightMu = weightMu(v_muplotIdIsoIp);
+      else if(MCSample=="MC") eventWeightMu = weightMu(v_muplotIdIsoIp)*eventWeight;
       if(v_muplotIdIsoIp.at(0).charge*v_muplotIdIsoIp.at(1).charge==1 and v_muplotIdIsoIp.at(0).pt > 30.0 and v_muplotIdIsoIp.at(1).pt > 30.0)
       {
         h_leading_mu_d0_IdIsoIp_MuMu->Fill(v_muplotIdIsoIp.at(0).d0,  eventWeightMu);
@@ -759,8 +754,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_muplotIdIsoIp.size()==1 and v_elplotIdIsoIp.size()==1)
     {
       double eventWeightElMu = 1.0;
-      if(MCSample=="Signal")eventWeightElMu = v_elplotIdIsoIp.at(0).recoEW*v_muplotIdIsoIp.at(0).recoEW*(1 - (1 - v_elplotIdIsoIp.at(0).triggerEW)*(1 - v_muplotIdIsoIp.at(0).triggerEW));
-      else if(MCSample=="MC")eventWeightElMu = v_elplotIdIsoIp.at(0).recoEW*v_muplotIdIsoIp.at(0).recoEW*(1 - (1 - v_elplotIdIsoIp.at(0).triggerEW)*(1 - v_muplotIdIsoIp.at(0).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightElMu = weightElMu(v_elplotIdIsoIp, v_muplotIdIsoIp);
+      else if(MCSample=="MC") eventWeightElMu = weightElMu(v_elplotIdIsoIp, v_muplotIdIsoIp)*eventWeight;
       if(v_elplotIdIsoIp.at(0).charge*v_muplotIdIsoIp.at(0).charge==1 and v_elplotIdIsoIp.at(0).pt > 30.0 and v_muplotIdIsoIp.at(0).pt > 30.0)
       {
         h_leading_mu_d0_IdIsoIp_ElMu->Fill(v_muplotIdIsoIp.at(0).d0, eventWeightElMu);
@@ -772,8 +767,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_elplotIdIsoIp.size()==2 and v_muons.size()==0)
     {
       double eventWeightEl = 1.0;
-      if(MCSample=="Signal")eventWeightEl = v_elplotIdIsoIp.at(0).recoEW*v_elplotIdIsoIp.at(1).recoEW*(1 - (1 - v_elplotIdIsoIp.at(0).triggerEW)*(1 - v_elplotIdIsoIp.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightEl = v_elplotIdIsoIp.at(0).recoEW*v_elplotIdIsoIp.at(1).recoEW*(1 - (1 - v_elplotIdIsoIp.at(0).triggerEW)*(1 - v_elplotIdIsoIp.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightEl = weightEl(v_elplotIdIsoIp);
+      else if(MCSample=="MC") eventWeightEl = weightEl(v_elplotIdIsoIp)*eventWeight;
       if(v_elplotIdIsoIp.at(0).charge*v_elplotIdIsoIp.at(1).charge==1 and v_elplotIdIsoIp.at(0).pt > 30.0 and v_elplotIdIsoIp.at(1).pt > 30.0)
       {
         h_leading_el_d0_IdIsoIp_ElEl->Fill(v_elplotIdIsoIp.at(0).d0, eventWeightEl);
@@ -786,8 +781,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     if(v_muplotIdIp.size()==2 and v_electrons.size()==0)
     { 
       double eventWeightMu = 1.0;
-      if(MCSample=="Signal")eventWeightMu = v_muplotIdIp.at(0).recoEW*v_muplotIdIp.at(1).recoEW*(1 - (1 - v_muplotIdIp.at(0).triggerEW)*(1 - v_muplotIdIp.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightMu = v_muplotIdIp.at(0).recoEW*v_muplotIdIp.at(1).recoEW*(1 - (1 - v_muplotIdIp.at(0).triggerEW)*(1 - v_muplotIdIp.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightMu = weightMu(v_muplotIdIp);
+      else if(MCSample=="MC") eventWeightMu = weightMu(v_muplotIdIp)*eventWeight;
       if(v_muplotIdIp.at(0).charge*v_muplotIdIp.at(1).charge==1 and v_muplotIdIp.at(0).pt > 30.0 and v_muplotIdIp.at(1).pt > 30.0)
       { 
         h_leading_mu_d0_IdIp_MuMu->Fill(v_muplotIdIp.at(0).d0, eventWeightMu);
@@ -799,8 +794,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_muplotIdIp.size()==1 and v_elplotIdIp.size()==1)
     { 
       double eventWeightElMu = 1.0;
-      if(MCSample=="Signal")eventWeightElMu = v_elplotIdIp.at(0).recoEW*v_muplotIdIp.at(0).recoEW*(1 - (1 - v_elplotIdIp.at(0).triggerEW)*(1 - v_muplotIdIp.at(0).triggerEW));
-      else if(MCSample=="MC")eventWeightElMu = v_elplotIdIp.at(0).recoEW*v_muplotIdIp.at(0).recoEW*(1 - (1 - v_elplotIdIp.at(0).triggerEW)*(1 - v_muplotIdIp.at(0).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightElMu = weightElMu(v_elplotIdIp, v_muplotIdIp);
+      else if(MCSample=="MC") eventWeightElMu = weightElMu(v_elplotIdIp, v_muplotIdIp)*eventWeight;
       if(v_elplotIdIp.at(0).charge*v_muplotIdIp.at(0).charge==1 and v_elplotIdIp.at(0).pt > 30.0 and v_muplotIdIp.at(0).pt > 30.0)
       { 
         h_leading_mu_d0_IdIp_ElMu->Fill(v_muplotIdIp.at(0).d0, eventWeightElMu);
@@ -812,8 +807,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_elplotIdIp.size()==2 and v_muons.size()==0)
     {
       double eventWeightEl = 1.0;
-      if(MCSample=="Signal")eventWeightEl = v_elplotIdIp.at(0).recoEW*v_elplotIdIp.at(1).recoEW*(1 - (1 - v_elplotIdIp.at(0).triggerEW)*(1 - v_elplotIdIp.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightEl = v_elplotIdIp.at(0).recoEW*v_elplotIdIp.at(1).recoEW*(1 - (1 - v_elplotIdIp.at(0).triggerEW)*(1 - v_elplotIdIp.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightEl = weightEl(v_elplotIdIp);
+      else if(MCSample=="MC") eventWeightEl = weightEl(v_elplotIdIp)*eventWeight;
       if(v_elplotIdIp.at(0).charge*v_elplotIdIp.at(1).charge==1 and v_elplotIdIp.at(0).pt > 30.0 and v_elplotIdIp.at(1).pt > 30.0)
       {
         h_leading_el_d0_IdIp_ElEl->Fill(v_elplotIdIp.at(0).d0, eventWeightEl);
@@ -827,8 +822,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     if(v_muons.size() == 2 and v_electrons.size()==0)
     {
       double eventWeightMu = 1.0;
-      if(MCSample=="Signal")eventWeightMu = v_muons.at(0).recoEW*v_muons.at(1).recoEW*(1 - (1 - v_muons.at(0).triggerEW)*(1 - v_muons.at(1).triggerEW));
-      else if(MCSample=="MC")eventWeightMu = v_muons.at(0).recoEW*v_muons.at(1).recoEW*(1 - (1 - v_muons.at(0).triggerEW)*(1 - v_muons.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal")eventWeightMu =  weightMu(v_muons);
+      else if(MCSample=="MC")eventWeightMu =  weightMu(v_muons)*eventWeight;  
       double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
       jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
       if(v_muons.at(0).charge*v_muons.at(1).charge==1 and v_muons.at(0).pt > 30.0 and v_muons.at(1).pt > 30.0)
@@ -896,8 +891,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_electrons.size() == 1 and v_muons.size()==1)
     {
       double eventWeightElMu = 1.0; 
-      if(MCSample=="Signal") eventWeightElMu = v_electrons.at(0).recoEW*v_muons.at(0).recoEW*(1 - (1 - v_electrons.at(0).triggerEW)*(1 - v_muons.at(0).triggerEW));
-      else if(MCSample=="MC") eventWeightElMu =  v_electrons.at(0).recoEW*v_muons.at(0).recoEW*(1 - (1 - v_electrons.at(0).triggerEW)*(1 - v_muons.at(0).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightElMu = weightElMu(v_electrons, v_muons);
+      else if(MCSample=="MC") eventWeightElMu = weightElMu(v_electrons, v_muons)*eventWeight;
       double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
       jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
       if(v_electrons.at(0).charge*v_muons.at(0).charge==1 and v_electrons.at(0).pt > 30.0 and v_muons.at(0).pt > 30.0)
@@ -976,8 +971,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_electrons.size() == 2 and v_muons.size()==0)
     {
         double eventWeightEl = 1.0;
-        if(MCSample=="MC") eventWeightEl = v_electrons.at(0).recoEW*v_electrons.at(1).recoEW*(1 - (1 - v_electrons.at(0).triggerEW)*(1 - v_electrons.at(1).triggerEW))*eventWeight;
-        else if(MCSample=="Signal") eventWeightEl = v_electrons.at(0).recoEW*v_electrons.at(1).recoEW*(1 - (1 - v_electrons.at(0).triggerEW)*(1 - v_electrons.at(1).triggerEW));
+        if(MCSample=="MC") eventWeightEl = weightEl(v_electrons)*eventWeight;
+        if(MCSample=="Signal") eventWeightEl = weightEl(v_electrons);
         double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
         jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
         if(v_electrons.at(0).charge*v_electrons.at(1).charge==1 and v_electrons.at(0).pt > 30.0 and v_electrons.at(1).pt > 30.0)
@@ -1054,8 +1049,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     if(v_muons.size() >= 2 and v_electrons.size()==0)
     {
       double eventWeightMu = 1.0;
-      if(MCSample=="Signal") eventWeightMu = v_muons.at(0).recoEW*v_muons.at(1).recoEW*(1 - (1 - v_muons.at(0).triggerEW)*(1 - v_muons.at(1).triggerEW));
-      else if(MCSample=="MC") eventWeightMu = v_muons.at(0).recoEW*v_muons.at(1).recoEW*(1 - (1 - v_muons.at(0).triggerEW)*(1 - v_muons.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightMu = weightMu(v_muons);
+      else if(MCSample=="MC") eventWeightMu = weightMu(v_muons)*eventWeight;
       double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
       jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
       if(v_muons.at(0).charge*v_muons.at(1).charge==-1 and v_muons.at(0).pt > 30.0 and v_muons.at(1).pt > 30.0 and met > 30)
@@ -1081,8 +1076,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     if(v_muons.size() >= 1 and v_electrons.size() >= 1)
     {
       double eventWeightElMu = 1.0;
-      if(MCSample=="Signal") eventWeightElMu = v_muons.at(0).recoEW*v_electrons.at(0).recoEW*(1 - (1 - v_muons.at(0).triggerEW)*(1 - v_electrons.at(0).triggerEW));
-      else if(MCSample=="MC") eventWeightElMu = v_muons.at(0).recoEW*v_electrons.at(0).recoEW*(1 - (1 - v_muons.at(0).triggerEW)*(1 - v_electrons.at(0).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightElMu = weightElMu(v_electrons, v_muons);
+      else if(MCSample=="MC") eventWeightElMu = weightElMu(v_electrons, v_muons)*eventWeight;
       double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
       jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
       if(v_muons.at(0).charge*v_electrons.at(0).charge==-1 and v_muons.at(0).pt > 30.0 and v_electrons.at(0).pt > 30.0 and met > 30)
@@ -1108,8 +1103,8 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
     else if(v_electrons.size() >= 2 and v_muons.size()==0)
     {
       double eventWeightEl = 1.0;
-      if(MCSample=="Signal") eventWeightEl = v_electrons.at(0).recoEW*v_electrons.at(1).recoEW*(1 - (1 - v_electrons.at(0).triggerEW)*(1 - v_electrons.at(1).triggerEW));
-      else if (MCSample=="MC") eventWeightEl = v_electrons.at(0).recoEW*v_electrons.at(1).recoEW*(1 - (1 - v_electrons.at(0).triggerEW)*(1 - v_electrons.at(1).triggerEW))*eventWeight;
+      if(MCSample=="Signal") eventWeightEl = weightEl(v_electrons);
+      else if(MCSample=="MC") eventWeightEl = weightEl(v_electrons)*eventWeight;
       double jet1pt, jet1eta, jet1phi, jet2pt, jet2eta, jet2phi, bjet1pt, bjet1csv, bjet2csv, bjet1eta, bjet1phi, bjet2pt, bjet2eta, bjet2phi;
       jet1pt = jet1eta = jet1phi = jet2pt = jet2eta = jet2phi = bjet1csv = bjet2csv = bjet1pt = bjet1eta = bjet1phi = bjet2pt = bjet2eta = bjet2phi = 0.0;
       if(v_electrons.at(0).charge*v_electrons.at(1).charge==-1 and v_electrons.at(0).pt > 30.0 and v_electrons.at(1).pt > 30.0 and met > 30)
@@ -1177,7 +1172,10 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
   tFile->mkdir("TTbarCR");
   tFile->mkdir("TTbarCR1b");
   tFile->mkdir("TTbarCR2b");
-  tFile->mkdir("IpIsoTuning");
+  tFile->mkdir("IpIsoTuning1Jet");
+  tFile->mkdir("IsolationPlots");
+  tFile->mkdir("ImpactParameterPlots");
+  tFile->mkdir("1JetCR");
   tFile->cd("2SSTL");
   writeHistCollection(mumuHistCut1);
   writeHistCollection(elelHistCut1);
@@ -1224,7 +1222,7 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
   writeHistCollection(mumuHistCut11);
   writeHistCollection(elelHistCut11);
   writeHistCollection(elmuHistCut11);
-  tFile->cd("IpIsoTuning");
+  tFile->cd("IpIsoTuning1Jet");
   writeHistCollection(mumuHistCut12);
   writeHistCollection(elelHistCut12);
   writeHistCollection(elmuHistCut13);
@@ -1238,6 +1236,7 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
   h_nPV_MuMu->Write();
   h_nPV_ElMu->Write();
   h_nPV_ElEl->Write();
+  tFile->cd("IsolationPlots");
   h_leading_mu_IdpfIso_MuMu->Write();
   h_trailing_mu_IdpfIso_MuMu->Write();
   h_leading_mu_IdtrkIso_MuMu->Write();
@@ -1250,7 +1249,6 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
   h_trailing_el_IdpfIso_ElEl->Write();
   h_leading_el_IdtrkIso_ElEl->Write();
   h_trailing_el_IdtrkIso_ElEl->Write();
-  
   h_leading_mu_pfIso_MuMu->Write();
   h_trailing_mu_pfIso_MuMu->Write();
   h_leading_mu_trkIso_MuMu->Write();
@@ -1264,60 +1262,48 @@ int ReadOutputBacon_UCSDCuts(std::string infile, std::string treeStr, std::strin
   h_leading_el_trkIso_ElEl->Write();
   h_trailing_el_trkIso_ElEl->Write();
   
+  tFile->cd("ImpactParameterPlots");
   h_leading_mu_d0_IdIsoIp_MuMu->Write();
   h_trailing_mu_d0_IdIsoIp_MuMu->Write();
   h_leading_mu_dz_IdIsoIp_MuMu->Write();
   h_trailing_mu_dz_IdIsoIp_MuMu->Write();
-
   h_leading_mu_d0_IdIsoIp_ElMu->Write();
   h_leading_el_d0_IdIsoIp_ElMu->Write();
   h_leading_mu_dz_IdIsoIp_ElMu->Write();
   h_leading_el_dz_IdIsoIp_ElMu->Write();
-
   h_leading_el_d0_IdIsoIp_ElEl->Write();
   h_trailing_el_d0_IdIsoIp_ElEl->Write();
   h_leading_el_dz_IdIsoIp_ElEl->Write();
   h_trailing_el_dz_IdIsoIp_ElEl->Write();
-
   h_leading_mu_d0_IdIp_MuMu->Write();
   h_trailing_mu_d0_IdIp_MuMu->Write();
   h_leading_mu_dz_IdIp_MuMu->Write();
   h_trailing_mu_dz_IdIp_MuMu->Write();
-
   h_leading_mu_d0_IdIp_ElMu->Write();
   h_leading_el_d0_IdIp_ElMu->Write();
   h_leading_mu_dz_IdIp_ElMu->Write();
   h_leading_el_dz_IdIp_ElMu->Write();
-
   h_leading_el_d0_IdIp_ElEl->Write();
   h_trailing_el_d0_IdIp_ElEl->Write();
   h_leading_el_dz_IdIp_ElEl->Write();
   h_trailing_el_dz_IdIp_ElEl->Write();
-      
+  tFile->cd("1JetCR");    
   h_leading_mu_Iso_Tune_MuMu->Write();
   h_trailing_mu_Iso_Tune_MuMu->Write();
-
   h_leading_mu_Iso_Tune_ElMu->Write();
   h_leading_el_Iso_Tune_ElMu->Write();
-
   h_leading_el_Iso_Tune_ElEl->Write();
   h_trailing_el_Iso_Tune_ElEl->Write();
-  
   h_leading_mu_d0_Tune_MuMu->Write();
   h_trailing_mu_d0_Tune_MuMu->Write();
-
   h_leading_mu_dz_Tune_MuMu->Write();
   h_trailing_mu_dz_Tune_MuMu->Write();
-
   h_leading_mu_d0_Tune_ElMu->Write();
   h_leading_el_d0_Tune_ElMu->Write();
-
   h_leading_mu_dz_Tune_ElMu->Write();
   h_leading_el_dz_Tune_ElMu->Write();
-
   h_leading_el_d0_Tune_ElEl->Write();
   h_trailing_el_d0_Tune_ElEl->Write();
-
   h_leading_el_dz_Tune_ElEl->Write();
   h_trailing_el_dz_Tune_ElEl->Write();
 

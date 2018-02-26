@@ -279,3 +279,17 @@ void fillElMuHistCollection(HistCollection &histCol, double el1pt, double mu1pt,
     if(nbjets >= 2) histCol.h_bjet_phi_trailing->Fill(bjet2phi, weight);
 }
 
+double weightMu(std::vector<leptonInfo> v_mu)
+{
+  return v_mu.at(0).recoEW*v_mu.at(1).recoEW*(1 - (1 - v_mu.at(0).triggerEW)*(1 - v_mu.at(1).triggerEW));
+}
+
+double weightEl(std::vector<leptonInfo> v_el)
+{
+  return v_el.at(0).recoEW*v_el.at(1).recoEW*(1 - (1 - v_el.at(0).triggerEW)*(1 - v_el.at(1).triggerEW));
+}
+
+double weightElMu(std::vector<leptonInfo> v_el, std::vector<leptonInfo> v_mu)
+{
+  return v_el.at(0).recoEW*v_mu.at(0).recoEW*(1 - (1 - v_el.at(0).triggerEW)*(1 - v_mu.at(0).triggerEW));
+}
