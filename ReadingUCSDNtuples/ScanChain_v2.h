@@ -59,6 +59,7 @@
 // RooUtil
 #include "rooutil/looper.h"
 #include "rooutil/ttreex.h"
+#include "rooutil/printutil.h"
 
 // CoreUtil
 #include "coreutil/jec.h"
@@ -74,6 +75,18 @@
 #include "coreutil/met.h"
 #include "coreutil/track.h"
 #include "coreutil/fatjet.h"
+
+#define VVV_TIGHT_SS VVV_cutbased_tight_v4
+#define VVV_TIGHT_3L VVV_cutbased_3l_tight_v4
+#define VVV_TIGHT_NOISO VVV_cutbased_tight_noiso_v4
+
+#define VVV_FO_SS VVV_cutbased_fo_v4
+#define VVV_FO_3L VVV_cutbased_3l_fo_v4
+#define VVV_FO_NOISO VVV_cutbased_fo_noiso_v4
+
+#define VVV_VETO VVV_cutbased_veto_v4
+#define VVV_VETO_NOISO VVV_cutbased_veto_noiso_v4
+
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LorentzVector;
 
@@ -109,13 +122,17 @@ private:
 
     TFile* ofile;
     TTree* t;
+    TTree* t_os;
+    TTree* t_ss;
     TTree* t_www;
     TTree* t_prompt;
     TTree* t_qflip;
     TTree* t_photon;
     TTree* t_lostlep;
     TTree* t_fakes;
+    TH1F* h_neventsinfile;
     RooUtil::TTreeX* tx;
+    RooUtil::Looper<CMS3> looper;
 
     std::string filename;
 
@@ -143,6 +160,9 @@ public:
     void ProcessTracks();
 
     bool PassPresel();
+    bool PassPresel_v1();
+    bool PassPresel_v2();
+    bool PassPresel_v3();
 
     void FillOutput();
 
@@ -200,11 +220,14 @@ public:
     tuple<bool, int, int> isSSCR();
 
     // special weights
-    std::tuple<float, float> getlepFakeRateandError(bool data, int version=1);
-    std::tuple<float, float> getlepSFandError(int index, int lepton_id_version=1);
-    std::tuple<float, float> getlepSFWeightandError(int lepton_id_version=1);
+    std::tuple<float, float, int> getlepFakeRateandErrorandLooseLepIdx(bool data, int version=2);
+    std::tuple<float, float> getlepSFandError(int index, int lepton_id_version=2);
+    std::tuple<float, float> getlepSFWeightandError(int lepton_id_version=2);
     static std::tuple<float, float> getCombinedTrigEffandError(float, float, float, float, float, float, float, float);
-    std::tuple<float, float> getTrigEffandError(int lepton_id_version=1);
+    std::tuple<float, float> getTrigEffandError(int lepton_id_version=2);
+    std::tuple<float, float> getTrigSFandError(int lepton_id_version=2);
+
+    void FATALERROR(const char* funcname="");
 
 };
 
