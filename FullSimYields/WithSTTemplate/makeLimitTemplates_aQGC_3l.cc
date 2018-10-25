@@ -297,6 +297,7 @@ int makeLimitTemplates_aQGC_3l(std::string infile, std::string outfile)
     h_ST_rgwt77_2SFOS->Fill(ST_rwgt77_2SFOS, weight_rwgt77_2SFOS*LUMI*BR);
     h_ST_bkg_2SFOS->Fill(ST_bkg_2SFOS, weight_bkg_2SFOS*LUMI); 
 
+    
     for(int j=1; j<h_ST_rgwt67_0SFOS->GetNbinsX()+1; j++) 
     {
       h_ST_rgwt67_0SFOS_MinusSM->SetBinContent(j, (h_ST_rgwt67_0SFOS->GetBinContent(j)-h_ST_rgwt72_0SFOS->GetBinContent(j)));
