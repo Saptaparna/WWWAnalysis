@@ -481,32 +481,32 @@ void CoreUtil::jec::setFatJECFor(TString filename, bool isfastsim)
     {
         if (filename.Contains("Run2017B"))
         {
-            setJECFileNames("Fall17_17Nov2017B_V6", "DATA");
+            setFatJECFileNames("Fall17_17Nov2017B_V6", "DATA");
         }
         if (filename.Contains("Run2017C"))
         {
-            setJECFileNames("Fall17_17Nov2017C_V6", "DATA");
+            setFatJECFileNames("Fall17_17Nov2017C_V6", "DATA");
         }
         if (filename.Contains("Run2017D"))
         {
-            setJECFileNames("Fall17_17Nov2017D_V6", "DATA");
+            setFatJECFileNames("Fall17_17Nov2017D_V6", "DATA");
         }
         if (filename.Contains("Run2017E"))
         {
-            setJECFileNames("Fall17_17Nov2017E_V6", "DATA");
+            setFatJECFileNames("Fall17_17Nov2017E_V6", "DATA");
         }
         if (filename.Contains("Run2017F"))
         {
-            setJECFileNames("Fall17_17Nov2017F_V6", "DATA");
+            setFatJECFileNames("Fall17_17Nov2017F_V6", "DATA");
         }
     }
     else if (filename.Contains("Fall17MiniAOD"))
     {
-        setJECFileNames("Fall17_17Nov2017_V6", "MC");
+        setFatJECFileNames("Fall17_17Nov2017_V6", "MC");
     }
     else if (filename.Contains("PhotophobicALP"))
     {
-        setJECFileNames("Fall17_17Nov2017_V6", "MC");
+        setFatJECFileNames("Fall17_17Nov2017_V6", "MC");
     }
     
     //-----------------------------------------------------------------------------------------------------------------------------------
