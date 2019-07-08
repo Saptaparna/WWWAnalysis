@@ -62,7 +62,8 @@ void is5leptonZandWtag(std::vector<leptonInfo> v_leptons, double met_pt, double 
   double Mw = 80.379;
   double pair1massDiff, pair2massDiff;
   pair1massDiff=pair2massDiff=0.0;
-  double compare = 20;
+  double compare1 = 20;
+  double compare2 = 20;
   for(unsigned int i=0; i<v_leptons.size(); i++)
   {
     for(unsigned int j=0; j<v_leptons.size(); j++)
@@ -73,7 +74,7 @@ void is5leptonZandWtag(std::vector<leptonInfo> v_leptons, double met_pt, double 
         {
           chi1_sq = pow(((v_leptons.at(i).lep_lv+v_leptons.at(j).lep_lv).M() - Mz), 2);
           pair1massDiff = ((v_leptons.at(i).lep_lv+v_leptons.at(j).lep_lv).M() - Mz);
-          if(fabs(pair1massDiff) <= compare) compare = pair1massDiff;
+          if(fabs(pair1massDiff) <= compare1) compare1 = fabs(pair1massDiff);
           for(unsigned int k=0; k<v_leptons.size(); k++)
           {
             for(unsigned int l=0; l<v_leptons.size(); l++)
@@ -84,8 +85,8 @@ void is5leptonZandWtag(std::vector<leptonInfo> v_leptons, double met_pt, double 
                 {
                   chi2_sq = pow(((v_leptons.at(k).lep_lv+v_leptons.at(l).lep_lv).M() - Mz), 2);
                   pair2massDiff = ((v_leptons.at(k).lep_lv+v_leptons.at(l).lep_lv).M() - Mz);
-                  if(fabs(pair2massDiff) <= compare) compare = pair2massDiff;
-                  if(fabs(pair1massDiff) < 20.0 and fabs(pair2massDiff) < 20.0 )//zz tag
+                  if(fabs(pair2massDiff) <= compare2) compare2 = fabs(pair2massDiff);
+                  if(compare1 < 20.0 and compare2 < 20.0 )//zz tag
                   {
                     z_lep1=i;
                     z_lep2=j;
