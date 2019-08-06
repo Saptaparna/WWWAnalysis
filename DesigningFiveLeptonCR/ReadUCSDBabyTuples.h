@@ -15,6 +15,7 @@
 #include <TGraphAsymmErrors.h>
 #include <TVector3.h>
 #include <TRandom.h>
+#include "METzCalculator_Run2.h"
 
 using std::string;
 
@@ -23,7 +24,7 @@ double ELECTRON_MASS = 511*10e-06;
 
 bool sameVal(double a, double b)
 {
-   return fabs(a - b) < 20.0;
+   return fabs(a - b) < 25.0;
 }
 
 bool sameValHighPrecision(double a, double b)
