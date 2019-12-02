@@ -2429,6 +2429,7 @@ float Analysis::LeptonScaleFactorv1()
             else if (year == 2018)
             {
                 scalefactor *= histmap_2018_elec_reco_sf           ->eval(eta, pt); // x=eta, y=pt
+                
                 if (passNominalElectronID(lep_idx))
                 {
                     scalefactor *= histmap_2018_elec_medium_sf         ->eval(eta, pt); // x=eta, y=pt
