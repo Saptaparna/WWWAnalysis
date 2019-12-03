@@ -2630,11 +2630,11 @@ float Analysis::IndividualLeptonScaleFactor(int lep_idx, bool isNominal, int var
                 if (isNominal)
                 {
                     if (vare == 0)
-                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval(abseta, pt); // x=eta, y=pt
                     if (vare == 1)
-                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval_up(abseta, pt); // x=eta, y=pt
                     if (vare ==-1)
-                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval_down(abseta, pt); // x=eta, y=pt
                 }
                 else
                 {
@@ -2693,11 +2693,11 @@ float Analysis::IndividualLeptonScaleFactor(int lep_idx, bool isNominal, int var
                 if (isNominal)
                 {
                     if (vare == 0)
-                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval(abseta, pt); // x=eta, y=pt
                     if (vare == 1)
-                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval_up(abseta, pt); // x=eta, y=pt
                     if (vare ==-1)
-                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval_down(abseta, pt); // x=eta, y=pt
                 }
                 else
                 {
@@ -2744,11 +2744,11 @@ float Analysis::IndividualLeptonScaleFactor(int lep_idx, bool isNominal, int var
                 if (isNominal)
                 {
                     if (vare == 0)
-                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval(abseta, pt); // x=eta, y=pt
                     if (vare == 1)
-                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval_up(abseta, pt); // x=eta, y=pt
                     if (vare ==-1)
-                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval_down(abseta, pt); // x=eta, y=pt
                 }
                 else
                 {
