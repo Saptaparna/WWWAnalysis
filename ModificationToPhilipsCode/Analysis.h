@@ -203,6 +203,8 @@ public:
     RooUtil::HistMap* histmap_2016_muon_BCDEF_id_lowpt_sf;
     RooUtil::HistMap* histmap_2016_muon_BCDEF_tightiso_sf;
     RooUtil::HistMap* histmap_2016_muon_BCDEF_looseiso_sf;
+    RooUtil::HistMap* histmap_2016_muon_looseiso_sf;
+    RooUtil::HistMap* histmap_2016_muon_tightiso_sf; 
     RooUtil::HistMap* histmap_2016_muon_GH_id_sf;
     RooUtil::HistMap* histmap_2016_muon_GH_id_lowpt_sf;
     RooUtil::HistMap* histmap_2016_muon_GH_tightiso_sf;
@@ -227,7 +229,9 @@ public:
     RooUtil::HistMap* histmap_2017_elec_mva_veto_sf;
     RooUtil::HistMap* histmap_2018_elec_mva_medium_sf;
     RooUtil::HistMap* histmap_2018_elec_mva_veto_sf;
-
+    RooUtil::HistMap* histmap_2016_muon_veto_sf;
+    RooUtil::HistMap* histmap_2017_muon_veto_sf;
+    RooUtil::HistMap* histmap_2018_muon_veto_sf;
     // MET MC Correction for
     METCorrectionHandler metcorrector;
     METObject metobj;
