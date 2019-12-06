@@ -671,17 +671,34 @@ void Analysis::Loop(const char* NtupleVersion, const char* TagName, bool dosyst,
         cutflow.addWgtSyst("PileupUp"  , [&]()
                 {
                 if (wvz.isData()) return 1.f;
-                if (year == 2016) return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwUp2016(wvz.nTrueInt()) / getTruePUw2016(wvz.nTrueInt()) : 0;
-                else if (year == 2017) return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwUp2017(wvz.nTrueInt()) / getTruePUw2017(wvz.nTrueInt()) : 0;
-                else if (year == 2018) return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwUp2018(wvz.nTrueInt()) / getTruePUw2018(wvz.nTrueInt()) : 0;
+                /*if (year == 2016) 
+                {
+                  std::cout << "wvz.nTrueInt() = " << wvz.nTrueInt() << std::endl;
+                  std::cout << "getTruePUw2016(wvz.nTrueInt()) = " << getTruePUw2016(wvz.nTrueInt()) << std::endl;
+                  std::cout << "getTruePUwUp2016(wvz.nTrueInt()) = " << getTruePUwUp2016(wvz.nTrueInt()) << std::endl;
+                  std::cout << "getTruePUwDn2016(wvz.nTrueInt()) = " << getTruePUwDn2016(wvz.nTrueInt()) << std::endl;
+                  //return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwUp2016(wvz.nTrueInt()) / getTruePUw2016(wvz.nTrueInt()) : 0;
+                  //return getTruePUwUp2016(wvz.nTrueInt());
+                }*/
+                //if (year == 2016) return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwUp2016(wvz.nTrueInt()) / getTruePUw2016(wvz.nTrueInt()) : 0; 
+                //else if (year == 2017) return getTruePUw2017(wvz.nTrueInt()) != 0 ? getTruePUwUp2017(wvz.nTrueInt()) / getTruePUw2017(wvz.nTrueInt()) : 0;
+                //else if (year == 2018) return getTruePUw2018(wvz.nTrueInt()) != 0 ? getTruePUwUp2018(wvz.nTrueInt()) / getTruePUw2018(wvz.nTrueInt()) : 0;
+                //return 0.f;
+                if (year == 2016) return getTruePUwUp2016(wvz.nTrueInt());
+                else if (year == 2017) return getTruePUwUp2017(wvz.nTrueInt());
+                else if (year == 2018) return getTruePUwUp2018(wvz.nTrueInt());
                 return 0.f;
                 } );
         cutflow.addWgtSyst("PileupDown"  , [&]()
                 {
                 if (wvz.isData()) return 1.f;
-                if (year == 2016) return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwDn2016(wvz.nTrueInt()) / getTruePUw2016(wvz.nTrueInt()) : 0;
-                else if (year == 2017) return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwDn2017(wvz.nTrueInt()) / getTruePUw2017(wvz.nTrueInt()) : 0;
-                else if (year == 2018) return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwDn2018(wvz.nTrueInt()) / getTruePUw2018(wvz.nTrueInt()) : 0;
+                /*if (year == 2016) return getTruePUw2016(wvz.nTrueInt()) != 0 ? getTruePUwDn2016(wvz.nTrueInt()) / getTruePUw2016(wvz.nTrueInt()) : 0;
+                else if (year == 2017) return getTruePUw2017(wvz.nTrueInt()) != 0 ? getTruePUwDn2017(wvz.nTrueInt()) / getTruePUw2017(wvz.nTrueInt()) : 0;
+                else if (year == 2018) return getTruePUw2018(wvz.nTrueInt()) != 0 ? getTruePUwDn2018(wvz.nTrueInt()) / getTruePUw2018(wvz.nTrueInt()) : 0;
+                return 0.f;*/
+                if (year == 2016) return getTruePUwDn2016(wvz.nTrueInt());
+                else if (year == 2017) return getTruePUwDn2017(wvz.nTrueInt());
+                else if (year == 2018) return getTruePUwDn2018(wvz.nTrueInt());
                 return 0.f;
                 } );
 
@@ -1246,9 +1263,9 @@ void Analysis::fillSkimTree(std::vector<int> region_flags)
 
     looper->fillSkim();
 }
-/*
+
 //______________________________________________________________________________________________
-void Analysis::loadScaleFactors()
+/*void Analysis::loadScaleFactors()
 {
     histmap_2016_elec_reco_highpt_sf    = new RooUtil::HistMap("/nfs-7/userdata/phchang/analysis_data/scalefactors/wvz/v1/EGM2D_BtoH_GT20GeV_RecoSF_Legacy2016.root:EGamma_SF2D"); // x=eta, y=pt
     histmap_2016_elec_reco_lowpt_sf     = new RooUtil::HistMap("/nfs-7/userdata/phchang/analysis_data/scalefactors/wvz/v1/EGM2D_BtoH_low_RecoSF_Legacy2016.root:EGamma_SF2D"); // x=eta, y=pt
@@ -1293,7 +1310,7 @@ void Analysis::loadScaleFactors()
 }*/
 
 //______________________________________________________________________________________________
-void Analysis::loadScaleFactors()
+void Analysis::loadScaleFactors()//Saptas changes
 {
     histmap_2016_elec_reco_highpt_sf    = new RooUtil::HistMap("/nfs-7/userdata/phchang/analysis_data/scalefactors/wvz/v1/EGM2D_BtoH_GT20GeV_RecoSF_Legacy2016.root:EGamma_SF2D"); // x=eta, y=pt
     histmap_2016_elec_reco_lowpt_sf     = new RooUtil::HistMap("/nfs-7/userdata/phchang/analysis_data/scalefactors/wvz/v1/EGM2D_BtoH_low_RecoSF_Legacy2016.root:EGamma_SF2D"); // x=eta, y=pt
@@ -2569,6 +2586,7 @@ float Analysis::LeptonScaleFactor5Lep(int vare, int varm)
     scalefactor *= IndividualLeptonScaleFactor(lep_5Lep_Z2_idx1, false, vare, varm);
     scalefactor *= IndividualLeptonScaleFactor(lep_5Lep_Z2_idx2, false, vare, varm);
     scalefactor *= IndividualLeptonScaleFactor(lep_5Lep_W_idx, false, vare, varm);
+    //std::cout << "scalefactor = " << scalefactor << std::endl;
     return scalefactor;
 }
 
@@ -2944,6 +2962,340 @@ float Analysis::IndividualLeptonScaleFactor(int lep_idx, bool isNominal, int var
     }
     return scalefactor;
 }
+/*
+float Analysis::IndividualLeptonScaleFactor(int lep_idx, bool isNominal, int vare, int varm)//old version of function
+{
+    if (vare != 0 and vare != 1 and vare != -1)
+        RooUtil::error(TString::Format("Unrecognized variation value vare = %d", vare).Data(), "IndividualLeptonScaleFactor");
+    if (varm != 0 and varm != 1 and varm != -1)
+        RooUtil::error(TString::Format("Unrecognized variation value varm = %d", varm).Data(), "IndividualLeptonScaleFactor");
+    if (wvz.isData())
+        return 1.;
+    // Based on lep_Veto indices
+    float scalefactor = 1;
+    if (lep_idx < 0)
+        return 1;
+    int absid = abs(wvz.lep_id().at(lep_idx));
+    float pt = absid == 11 ? std::min((double) wvz.lep_pt().at(lep_idx), 499.9) : std::min((double) wvz.lep_pt().at(lep_idx), 119.9);
+    float eta = wvz.lep_eta().at(lep_idx);
+    float abseta = fabs(eta);
+    if (absid == 11)
+    {
+        if (year == 2016)
+        {
+            if (pt > 20)
+            {
+                if (vare == 0)
+                    scalefactor *= histmap_2016_elec_reco_highpt_sf    ->eval(eta, pt); // x=eta, y=pt
+                if (vare == 1)
+                    scalefactor *= histmap_2016_elec_reco_highpt_sf    ->eval_up(eta, pt); // x=eta, y=pt
+                if (vare ==-1)
+                    scalefactor *= histmap_2016_elec_reco_highpt_sf    ->eval_down(eta, pt); // x=eta, y=pt
+            }
+            else
+            {
+                if (vare == 0)
+                    scalefactor *= histmap_2016_elec_reco_lowpt_sf     ->eval(eta, pt); // x=eta, y=pt
+                if (vare == 1)
+                    scalefactor *= histmap_2016_elec_reco_lowpt_sf     ->eval_up(eta, pt); // x=eta, y=pt
+                if (vare ==-1)
+                    scalefactor *= histmap_2016_elec_reco_lowpt_sf     ->eval_down(eta, pt); // x=eta, y=pt
+            }
+            if (useMVAID)
+            {
+                if (isNominal)
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2016_elec_mva_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                }
+                else
+                {
+                    scalefactor *= 1.; // TODO
+                    // if (vare == 0)
+                    //     scalefactor *= histmap_2016_elec_veto_sf           ->eval(eta, pt); // x=eta, y=pt
+                    // if (vare == 1)
+                    //     scalefactor *= histmap_2016_elec_veto_sf           ->eval_up(eta, pt); // x=eta, y=pt
+                    // if (vare ==-1)
+                    //     scalefactor *= histmap_2016_elec_veto_sf           ->eval_down(eta, pt); // x=eta, y=pt
+                }
+            }
+            else
+            {
+                if (isNominal)
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2016_elec_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2016_elec_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2016_elec_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                }
+                else
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2016_elec_veto_sf           ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2016_elec_veto_sf           ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2016_elec_veto_sf           ->eval_down(eta, pt); // x=eta, y=pt
+                }
+            }
+        }
+        else if (year == 2017)
+        {
+            if (pt > 20)
+            {
+                if (vare == 0)
+                    scalefactor *= histmap_2017_elec_reco_highpt_sf    ->eval(eta, pt); // x=eta, y=pt
+                if (vare == 1)
+                    scalefactor *= histmap_2017_elec_reco_highpt_sf    ->eval_up(eta, pt); // x=eta, y=pt
+                if (vare ==-1)
+                    scalefactor *= histmap_2017_elec_reco_highpt_sf    ->eval_down(eta, pt); // x=eta, y=pt
+            }
+            else
+            {
+                if (vare == 0)
+                    scalefactor *= histmap_2017_elec_reco_lowpt_sf     ->eval(eta, pt); // x=eta, y=pt
+                if (vare == 1)
+                    scalefactor *= histmap_2017_elec_reco_lowpt_sf     ->eval_up(eta, pt); // x=eta, y=pt
+                if (vare ==-1)
+                    scalefactor *= histmap_2017_elec_reco_lowpt_sf     ->eval_down(eta, pt); // x=eta, y=pt
+            }
+            if (useMVAID)
+            {
+                if (isNominal)
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2017_elec_mva_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                }
+                else
+                {
+                    //scalefactor *= 1.; // TODO
+                     if (vare == 0)
+                         scalefactor *= histmap_2017_elec_veto_sf           ->eval(eta, pt); // x=eta, y=pt
+                     if (vare == 1)
+                         scalefactor *= histmap_2017_elec_veto_sf           ->eval_up(eta, pt); // x=eta, y=pt
+                     if (vare ==-1)
+                         scalefactor *= histmap_2017_elec_veto_sf           ->eval_down(eta, pt); // x=eta, y=pt
+                }
+            }
+            else
+            {
+                if (isNominal)
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2017_elec_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2017_elec_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2017_elec_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                }
+                else
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2017_elec_veto_sf           ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2017_elec_veto_sf           ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2017_elec_veto_sf           ->eval_down(eta, pt); // x=eta, y=pt
+                }
+            }
+        }
+        else if (year == 2018)
+        {
+            if (vare == 0)
+                scalefactor *= histmap_2018_elec_reco_sf           ->eval(eta, pt); // x=eta, y=pt
+            if (vare == 1)
+                scalefactor *= histmap_2018_elec_reco_sf           ->eval_up(eta, pt); // x=eta, y=pt
+            if (vare ==-1)
+                scalefactor *= histmap_2018_elec_reco_sf           ->eval_down(eta, pt); // x=eta, y=pt
+            if (useMVAID)
+            {
+                if (isNominal)
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2018_elec_mva_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                }
+                else
+                {
+                    scalefactor *= 1.; // TODO
+                    if (vare == 0)
+                        scalefactor *= histmap_2018_elec_veto_sf           ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2018_elec_veto_sf           ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2018_elec_veto_sf           ->eval_down(eta, pt); // x=eta, y=pt
+                }
+            }
+            else
+            {
+                if (isNominal)
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2018_elec_medium_sf         ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2018_elec_medium_sf         ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2018_elec_medium_sf         ->eval_down(eta, pt); // x=eta, y=pt
+                }
+                else
+                {
+                    if (vare == 0)
+                        scalefactor *= histmap_2018_elec_veto_sf           ->eval(eta, pt); // x=eta, y=pt
+                    if (vare == 1)
+                        scalefactor *= histmap_2018_elec_veto_sf           ->eval_up(eta, pt); // x=eta, y=pt
+                    if (vare ==-1)
+                        scalefactor *= histmap_2018_elec_veto_sf           ->eval_down(eta, pt); // x=eta, y=pt
+                }
+            }
+        }
+    }
+    else if (absid == 13)
+    {
+        if (year == 2016)
+        {
+            if (pt > 20)
+            {
+                if (varm == 0)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_id_sf       ->eval(eta, pt)  // x=eta, y=pt
+                    +0.450 * histmap_2016_muon_GH_id_sf          ->eval(eta, pt); // x=eta, y=pt 0.450 of 2016 data
+                if (varm == 1)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_id_sf       ->eval_up(eta, pt)  // x=eta, y=pt
+                    +0.450 * histmap_2016_muon_GH_id_sf          ->eval_up(eta, pt); // x=eta, y=pt 0.450 of 2016 data
+                if (varm ==-1)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_id_sf       ->eval_down(eta, pt)  // x=eta, y=pt
+                    +0.450 * histmap_2016_muon_GH_id_sf          ->eval_down(eta, pt); // x=eta, y=pt 0.450 of 2016 data
+            }
+            else
+            {
+                if (varm == 0)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_id_lowpt_sf ->eval(pt, abseta)  // x=pt, y=abseta
+                    +0.450 * histmap_2016_muon_GH_id_lowpt_sf    ->eval(pt, abseta); // x=pt, y=abseta 0.450 of 2016 data
+                if (varm == 1)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_id_lowpt_sf ->eval_up(pt, abseta)  // x=pt, y=abseta
+                    +0.450 * histmap_2016_muon_GH_id_lowpt_sf    ->eval_up(pt, abseta); // x=pt, y=abseta 0.450 of 2016 data
+                if (varm ==-1)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_id_lowpt_sf ->eval_down(pt, abseta)  // x=pt, y=abseta
+                    +0.450 * histmap_2016_muon_GH_id_lowpt_sf    ->eval_down(pt, abseta); // x=pt, y=abseta 0.450 of 2016 data
+            }
+            if (isNominal)
+            {
+                if (varm == 0)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_tightiso_sf ->eval(eta, std::max((double) pt, 20.1))  // x=eta, y=pt
+                    +0.450 * histmap_2016_muon_GH_tightiso_sf    ->eval(eta, std::max((double) pt, 20.1)); // x=eta, y=pt 0.450 of 2016 data
+                if (varm == 1)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_tightiso_sf ->eval_up(eta, std::max((double) pt, 20.1))  // x=eta, y=pt
+                    +0.450 * histmap_2016_muon_GH_tightiso_sf    ->eval_up(eta, std::max((double) pt, 20.1)); // x=eta, y=pt 0.450 of 2016 data
+                if (varm ==-1)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_tightiso_sf ->eval_down(eta, std::max((double) pt, 20.1))  // x=eta, y=pt
+                    +0.450 * histmap_2016_muon_GH_tightiso_sf    ->eval_down(eta, std::max((double) pt, 20.1)); // x=eta, y=pt 0.450 of 2016 data
+            }
+            else
+            {
+                if (varm == 0)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_looseiso_sf ->eval(eta, std::max((double) pt, 20.1))  // x=eta, y=pt
+                    +0.450           * histmap_2016_muon_GH_looseiso_sf    ->eval(eta, std::max((double) pt, 20.1)); // x=eta, y=pt 0.450 of 2016 data
+                if (varm == 1)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_looseiso_sf ->eval_up(eta, std::max((double) pt, 20.1))  // x=eta, y=pt
+                    +0.450           * histmap_2016_muon_GH_looseiso_sf    ->eval_up(eta, std::max((double) pt, 20.1)); // x=eta, y=pt 0.450 of 2016 data
+                if (varm ==-1)
+                    scalefactor *= 0.550 * histmap_2016_muon_BCDEF_looseiso_sf ->eval_down(eta, std::max((double) pt, 20.1))  // x=eta, y=pt
+                    +0.450           * histmap_2016_muon_GH_looseiso_sf    ->eval_down(eta, std::max((double) pt, 20.1)); // x=eta, y=pt 0.450 of 2016 data
+            }
+        }
+        else if (year == 2017)
+        {
+            if (pt > 20)
+            {
+                if (varm == 0)
+                    scalefactor *= histmap_2017_muon_id_sf             ->eval(pt, abseta); // x=pt, y=abseta
+                if (varm == 1)
+                    scalefactor *= histmap_2017_muon_id_sf             ->eval_up(pt, abseta); // x=pt, y=abseta
+                if (varm ==-1)
+                    scalefactor *= histmap_2017_muon_id_sf             ->eval_down(pt, abseta); // x=pt, y=abseta
+            }
+            else
+            {
+                if (varm == 0)
+                    scalefactor *= histmap_2017_muon_id_lowpt_sf       ->eval(pt, abseta); // x=pt, y=abseta
+                if (varm == 1)
+                    scalefactor *= histmap_2017_muon_id_lowpt_sf       ->eval_up(pt, abseta); // x=pt, y=abseta
+                if (varm ==-1)
+                    scalefactor *= histmap_2017_muon_id_lowpt_sf       ->eval_down(pt, abseta); // x=pt, y=abseta
+            }
+            if (isNominal)
+            {
+                if (varm == 0)
+                    scalefactor *= histmap_2017_muon_tightiso_sf       ->eval(std::max((double) pt, 20.1), abseta); // x=pt, y=abseta
+                if (varm == 1)
+                    scalefactor *= histmap_2017_muon_tightiso_sf       ->eval_up(std::max((double) pt, 20.1), abseta); // x=pt, y=abseta
+                if (varm ==-1)
+                    scalefactor *= histmap_2017_muon_tightiso_sf       ->eval_down(std::max((double) pt, 20.1), abseta); // x=pt, y=abseta
+            }
+            else
+            {
+                if (varm == 0)
+                    scalefactor *= histmap_2017_muon_looseiso_sf       ->eval(std::max((double) pt, 20.1), abseta); // x=pt, y=abseta
+                if (varm == 1)
+                    scalefactor *= histmap_2017_muon_looseiso_sf       ->eval_up(std::max((double) pt, 20.1), abseta); // x=pt, y=abseta
+                if (varm ==-1)
+                    scalefactor *= histmap_2017_muon_looseiso_sf       ->eval_down(std::max((double) pt, 20.1), abseta); // x=pt, y=abseta
+            }
+        }
+        else if (year == 2018)
+        {
+            if (pt > 20)
+            {
+                if (varm == 0)
+                    scalefactor *= histmap_2018_muon_id_sf             ->eval(pt, abseta); // x=pt, y=abseta
+                if (varm == 1)
+                    scalefactor *= histmap_2018_muon_id_sf             ->eval_up(pt, abseta); // x=pt, y=abseta
+                if (varm ==-1)
+                    scalefactor *= histmap_2018_muon_id_sf             ->eval_down(pt, abseta); // x=pt, y=abseta
+            }
+            else
+            {
+                if (varm == 0)
+                    scalefactor *= histmap_2018_muon_id_lowpt_sf       ->eval(pt, abseta); // x=pt, y=abseta
+                if (varm == 1)
+                    scalefactor *= histmap_2018_muon_id_lowpt_sf       ->eval_up(pt, abseta); // x=pt, y=abseta
+                if (varm ==-1)
+                    scalefactor *= histmap_2018_muon_id_lowpt_sf       ->eval_down(pt, abseta); // x=pt, y=abseta
+            }
+            if (isNominal)
+            {
+                if (varm == 0)
+                    scalefactor *= histmap_2018_muon_tightiso_sf       ->eval(std::max((double) pt, 15.1), abseta); // x=pt, y=abseta
+                if (varm == 1)
+                    scalefactor *= histmap_2018_muon_tightiso_sf       ->eval_up(std::max((double) pt, 15.1), abseta); // x=pt, y=abseta
+                if (varm ==-1)
+                    scalefactor *= histmap_2018_muon_tightiso_sf       ->eval_down(std::max((double) pt, 15.1), abseta); // x=pt, y=abseta
+            }
+            else
+            {
+                if (varm == 0)
+                    scalefactor *= histmap_2018_muon_looseiso_sf       ->eval(std::max((double) pt, 15.1), abseta); // x=pt, y=abseta
+                if (varm == 1)
+                    scalefactor *= histmap_2018_muon_looseiso_sf       ->eval_up(std::max((double) pt, 15.1), abseta); // x=pt, y=abseta
+                if (varm ==-1)
+                    scalefactor *= histmap_2018_muon_looseiso_sf       ->eval_down(std::max((double) pt, 15.1), abseta); // x=pt, y=abseta
+            }
+        }
+    }
+    return scalefactor;
+}*/
 
 //______________________________________________________________________________________________
 float Analysis::BTagSF()
@@ -3178,6 +3530,13 @@ bool Analysis::CutHighMT(int var)
     {
         if (not (wvz.nb() == 0)) return false;
         if (not (VarMT5th(var) > 50.)) return false;
+        /*if (not (wvz.nb() == 0)) return false;
+        //if (not ((abs(wvz.lep_id()[lep_5Lep_W_idx]) == 11 and VarMT5th(var) > 50.))) return false;
+        if((abs(wvz.lep_id()[lep_5Lep_W_idx]) == 11))
+        {
+          if(not (VarMT5th(var) > 50.)) return false;
+        }
+        else if((abs(wvz.lep_id()[lep_5Lep_W_idx]) == 13)) return true;*/
         return true;
     }
 }
@@ -3219,7 +3578,7 @@ bool Analysis::CutEMuSig(int var)
     }
     else if (nVetoLeptons == 5)
     {
-        if (not (VarMT5th(var) > 40.)) return false;
+        if (not (VarMT5th(var) > 50.)) return false;
         return true;
     }
 }
@@ -3713,11 +4072,15 @@ bool Analysis::Is5thNominal()
         return wvz.lep_relIso03EA()[lep_5Lep_W_idx] < 0.1;
     else
         return wvz.lep_relIso04DB()[lep_5Lep_W_idx] < 0.1;
+    
 
     // if (lep_relIso03EA->at(lep_WCand_idx1) < 0.1)
     //     return true;
     // else
     //     return false;
+    //if (passNominalLeptonID(lep_5Lep_W_idx)) return true;
+    //else return false;
+
 }
 
 //______________________________________________________________________________________________
